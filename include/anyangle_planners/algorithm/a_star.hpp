@@ -93,7 +93,7 @@ class AStar : public Planner {
   }
 
   inline double distanceCost(const astar::Vertex &v1, const astar::Vertex &v2) const {
-    return Planner::distanceCost(toState2D(v1, env_width_), toState2D(v2, env_width_));
+    return Planner::octileDistance(toState2D(v1, env_width_), toState2D(v2, env_width_));
   }
 
   void getNeighbors(astar::VertexPtr parent, astar::VertexList &neighbors);

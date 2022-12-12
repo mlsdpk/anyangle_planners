@@ -35,6 +35,11 @@ class Environment {
 
   unsigned int getHeight() const { return map_.getSize()(1); }
 
+  cv::Mat convertToCVImageRGB();
+
+  cv::Mat toImage();
+  cv::Mat toImage(const anyangle::State2DList& path);
+
  private:
   grid_map::GridMap map_;
 };

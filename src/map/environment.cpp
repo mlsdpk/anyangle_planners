@@ -106,5 +106,24 @@ bool Environment::inCollision(const unsigned int x, const unsigned int y) const 
   return map_.at("layer", grid_map::Index(x, y)) == 0.0 ? true : false;
 }
 
+cv::Mat Environment::convertToCVImageRGB() {
+  cv::Mat img, img_rgb;
+  grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map_, "layer", CV_8U, img);
+  cv::cvtColor(img, img_rgb, CV_GRAY2BGR);
+  return img_rgb;
+}
+
+cv::Mat Environment::toImage() { return convertToCVImageRGB(); }
+
+cv::Mat Environment::toImage(const anyangle::State2DList& path) {
+  auto img = toImage();
+  for (const auto& coor : path) {
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[0] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[1] = 255;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[2] = 0;
+  }
+  return img;
+}
+
 }  // namespace map
 }  // namespace anyangle

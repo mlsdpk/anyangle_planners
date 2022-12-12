@@ -79,6 +79,14 @@ class Planner {
     return x + y * width;
   }
 
+  inline double octileDistance(const State2D &s1, const State2D &s2) const {
+    const auto dx = std::fabs(s1.x - s2.x);
+    const auto dy = std::fabs(s1.y - s2.y);
+
+    if (dx > dy) return 1.0 * (dx - dy) + std::sqrt(2.0) * dy;
+    return 1.0 * (dy - dx) + std::sqrt(2.0) * dx;
+  }
+
   inline double distanceCost(const State2D &s1, const State2D &s2) const {
     return std::sqrt((s1.x - s2.x) * (s1.x - s2.x) + (s1.y - s2.y) * (s1.y - s2.y));
   }
