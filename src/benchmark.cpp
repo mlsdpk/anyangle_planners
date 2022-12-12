@@ -47,9 +47,12 @@ int main(int argc, char const* argv[]) {
       auto goal_x = scenario.experiments[i].goal_x;
       auto goal_y = scenario.experiments[i].goal_y;
 
+      std::cout << "Experiment No." << i << " : start_x: " << start_x << ", start_y: " << start_y
+                << ", goal_x: " << goal_x << ", goal_y: " << goal_y << std::endl;
+
       // solve
       bool solved = planner->solve(
-          anyangle::State2D(static_cast<float>(start_x), static_cast<float>(start_x)),
+          anyangle::State2D(static_cast<float>(start_x), static_cast<float>(start_y)),
           anyangle::State2D(static_cast<float>(goal_x), static_cast<float>(goal_y)));
 
       if (solved) {

@@ -33,13 +33,7 @@ class Planner {
    * @brief
    *
    */
-  virtual void init() = 0;
-
-  /**
-   * @brief
-   *
-   */
-  virtual void clear() = 0;
+  virtual void reset() = 0;
 
   /**
    * @brief
@@ -71,7 +65,7 @@ class Planner {
    *
    * @return State2DList
    */
-  virtual State2DList getSolutionPath() const { return path_; }
+  virtual bool getSolutionPath([[maybe_unused]] State2DList &path) const { return false; }
 
   /**
    * @brief Get the Path Cost object
@@ -85,7 +79,11 @@ class Planner {
     return x + y * width;
   }
 
-  double costToGoHeuristics(const State2D &s1, const State2D &s2) const {
+  inline double distanceCost(const State2D &s1, const State2D &s2) const {
+    return std::sqrt((s1.x - s2.x) * (s1.x - s2.x) + (s1.y - s2.y) * (s1.y - s2.y));
+  }
+
+  inline double costToGoHeuristics(const State2D &s1, const State2D &s2) const {
     return std::sqrt((s1.x - s2.x) * (s1.x - s2.x) + (s1.y - s2.y) * (s1.y - s2.y));
   }
 
