@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <memory>
 #include <string>
 
@@ -8,8 +9,6 @@
 
 namespace anyangle {
 namespace algorithm {
-
-using CollisionCheckerFn = std::function<bool(const State2D *)>;
 
 class Planner {
  public:
@@ -65,19 +64,7 @@ class Planner {
    */
   virtual std::size_t getTotalMemory() = 0;
 
-  /**
-   * @brief Set the Collision Checking function. The function must return True
-   * if the state is in collision.
-   *
-   * @param collision_checker User specific collision checking function
-   */
-  void setCollisionChecker(const CollisionCheckerFn &collision_checker) {
-    if (!collision_checker)
-      throw std::exception(
-          "Invalid function definition for collision checking");
-
-    collision_checker_ = std::move(collision_checker);
-  }
+  void setEnvironment(map::EnvironmentConstPtr env) { env_ = env; }
 
   /**
    * @brief Get the Solution Path object
@@ -93,27 +80,27 @@ class Planner {
    */
   virtual double getPathCost() const { return 0.0; }
 
- protected:
-  /**
-   * @brief
-   *
-   * @param state
-   * @return true
-   * @return false
-   */
-  bool isCollision(const State2D &state) const {
-    return collision_checker_(state);
+  inline unsigned int getNodeIndex(const unsigned int &x, const unsigned int &y,
+                                   const unsigned int &width) {
+    return x + y * width;
   }
 
+  double costToGoHeuristics(const State2D &s1, const State2D &s2) const {
+    return std::sqrt((s1.x - s2.x) * (s1.x - s2.x) + (s1.y - s2.y) * (s1.y - s2.y));
+  }
+
+ protected:
   //// The name of the planner
   std::string name_;
 
   //// Solution path
   State2DList path_;
 
-  //// Collision checking function
-  CollisionCheckerFn collision_checker_;
+  //// Shared ptr to environment
+  map::EnvironmentConstPtr env_;
 };
+
+typedef std::shared_ptr<Planner> PlannerPtr;
 
 }  // namespace algorithm
 }  // namespace anyangle
