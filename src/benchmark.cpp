@@ -8,6 +8,7 @@
 
 #include "anyangle_planners/algorithm/a_star.hpp"
 #include "anyangle_planners/algorithm/planner.hpp"
+#include "anyangle_planners/algorithm/theta_star.hpp"
 #include "anyangle_planners/map/environment.hpp"
 #include "anyangle_planners/map/scenario_loader.hpp"
 
@@ -44,33 +45,38 @@ int main(int argc, char const* argv[]) {
       env->initializeFromMovingAILabScenario(scenario);
 
       // lets create an example planner
-      auto planner = std::make_shared<AStar>("astar");
+      auto planner1 = std::make_shared<AStar>("astar");
+      auto planner2 = std::make_shared<ThetaStar>("thetastar");
 
       // provide an environment
-      planner->setEnvironment(env);
+      planner1->setEnvironment(env);
+      planner2->setEnvironment(env);
 
       std::vector<PlannerPtr> planners;
-      planners.push_back(planner);
+      // planners.push_back(planner1);
+      planners.push_back(planner2);
 
       // run all the experiments inside scenario for each planner
       for (std::size_t planner_id = 0; planner_id < planners.size(); ++planner_id) {
+        std::cout << planner_id << std::endl;
         // create file to store the data
-        // std::string output_folder = "output";
-        // std::string output_file = scenario.experiments[0].map_name + std::string(".txt");
+        std::string output_folder = "output";
+        std::string output_file = scenario.experiments[0].map_name + std::string(".txt");
         // fs::create_directory(output_folder);
         // std::ofstream out(output_folder + "/" + output_file);
 
         std::vector<double> path_costs;
         std::vector<unsigned> run_times;
 
-        for (std::size_t i = 0; i < scenario.experiments.size(); ++i) {
+        for (std::size_t i = 100; i < scenario.experiments.size(); ++i) {
           auto start_x = scenario.experiments[i].start_x;
           auto start_y = scenario.experiments[i].start_y;
           auto goal_x = scenario.experiments[i].goal_x;
           auto goal_y = scenario.experiments[i].goal_y;
 
-          // out << "Experiment No." << i << " : start_x: " << start_x << ", start_y: " << start_y
-          //     << ", goal_x: " << goal_x << ", goal_y: " << goal_y << std::endl;
+          std::cout << "Experiment No." << i << " : start_x: " << start_x
+                    << ", start_y: " << start_y << ", goal_x: " << goal_x << ", goal_y: " << goal_y
+                    << std::endl;
 
           // solve
           auto start_time = std::chrono::high_resolution_clock::now();
@@ -87,13 +93,16 @@ int main(int argc, char const* argv[]) {
             path_costs.push_back(planners[planner_id]->getPathCost());
             run_times.push_back(elapsed_time_ms);
 
-            // std::cout << "Experiment " << i << ", Bucket " << bucket << " solved with path length
-            // of
-            // "
-            //           << planner->getPathCost() << std::endl;
-            // std::cout << "Actual optimal path cost is " << scenario.experiments[i].optimal_length
-            //           << std::endl;
-            // std::cout << "Computation takes " << elapsed_time_ms << " [ms].\n";
+            std::cout << "Experiment " << i << ", Bucket " << bucket
+                      << " solved with path length of " << planners[planner_id]->getPathCost()
+                      << std::endl;
+            std::cout << "Actual optimal path cost is " << scenario.experiments[i].optimal_length
+                      << std::endl;
+            std::cout << "Computation takes " << elapsed_time_ms << " [ms].\n";
+
+            anyangle::State2DList closelist;
+            planners[planner_id]->getNodeExpansions(closelist);
+            std::cout << "Number of node expansions: " << closelist.size() << std::endl;
 
             // {
             //   out << std::to_string(i) << " " << std::to_string(bucket) << " "
@@ -105,8 +114,12 @@ int main(int argc, char const* argv[]) {
             anyangle::State2DList path;
             planners[planner_id]->getSolutionPath(path);
 
-            // auto img = env->toImage(path);
-            // cv::imwrite("test.jpg", img);
+            std::cout << "Path size: " << path.size() << std::endl;
+
+            auto img = env->toImage(path, closelist);
+            cv::imwrite("test.jpg", img);
+
+            return 0;
           }
         }
 
@@ -117,9 +130,8 @@ int main(int argc, char const* argv[]) {
 
         std::cout << "Avg path cost: " << avg_path_cost << ", Avg run time: " << avg_run_time
                   << std::endl;
-
-        return 0;
       }
+      return 0;
     }
   }
 

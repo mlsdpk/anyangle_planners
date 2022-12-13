@@ -93,7 +93,8 @@ class AStar : public Planner {
   }
 
   inline double distanceCost(const astar::Vertex &v1, const astar::Vertex &v2) const {
-    return Planner::octileDistance(toState2D(v1, env_width_), toState2D(v2, env_width_));
+    // return Planner::octileDistance(toState2D(v1, env_width_), toState2D(v2, env_width_));
+    return Planner::distanceCost(toState2D(v1, env_width_), toState2D(v2, env_width_));
   }
 
   void getNeighbors(astar::VertexPtr parent, astar::VertexList &neighbors);
@@ -108,12 +109,15 @@ class AStar : public Planner {
    */
   bool getValidNeighbor(const unsigned int index, astar::VertexPtr &neighbor);
 
- private:
+ protected:
   using PQueueT =
       std::priority_queue<astar::VertexPtr, std::vector<astar::VertexPtr>, astar::VertexComparator>;
 
   //// openlist (frontier) for A* algorithm
   PQueueT open_list_;
+
+  //// closelist (expanded vertices)
+  State2DList close_list_;
 
   //// graph of processed vertices so far
   Graph graph_;

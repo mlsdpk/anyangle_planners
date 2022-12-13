@@ -17,6 +17,7 @@ add_executable(benchmark
     src/benchmark.cpp
     src/algorithm/a_star.cpp
     src/algorithm/planner.cpp
+    src/algorithm/theta_star.cpp
     src/map/environment.cpp
     src/map/scenario_loader.cpp)
 

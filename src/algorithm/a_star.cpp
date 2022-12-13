@@ -23,6 +23,8 @@ void AStar::reset() {
   while (!open_list_.empty()) {
     open_list_.pop();
   }
+
+  close_list_.clear();
 }
 
 astar::VertexPtr AStar::addToGraph(const unsigned int &index) {
@@ -78,6 +80,7 @@ bool AStar::solve(const State2D &start, const State2D &goal) {
     astar::VertexPtr v_min = open_list_.top();
     v_min->visited = true;
     open_list_.pop();
+    close_list_.push_back(toState2D(*v_min, env_width_));
 
     // if expanded vertex is goal, solved
     if (v_min == goal_vertex_) {
@@ -115,7 +118,7 @@ bool AStar::solve(const State2D &start, const State2D &goal) {
   return solved;
 }
 
-void AStar::getNodeExpansions(State2DList &nodes) {}
+void AStar::getNodeExpansions(State2DList &nodes) { nodes = close_list_; }
 
 std::size_t AStar::getTotalMemory() { return 0u; }
 

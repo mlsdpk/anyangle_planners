@@ -109,20 +109,65 @@ bool Environment::inCollision(const unsigned int x, const unsigned int y) const 
 cv::Mat Environment::convertToCVImageRGB() {
   cv::Mat img, img_rgb;
   grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map_, "layer", CV_8U, img);
+
+  cv::transpose(img, img);
+
   cv::cvtColor(img, img_rgb, CV_GRAY2BGR);
   return img_rgb;
 }
 
 cv::Mat Environment::toImage() { return convertToCVImageRGB(); }
 
-cv::Mat Environment::toImage(const anyangle::State2DList& path) {
+// cv::Mat Environment::toImage(const anyangle::State2DList& path) {
+//   auto img = toImage();
+
+//   for (std::size_t i = 0; i < path.size() - 1; ++i) {
+//     cv::line(img, cv::Point(static_cast<int>(path[i].x), static_cast<int>(path[i].y)),
+//              cv::Point(static_cast<int>(path[i + 1].x), static_cast<int>(path[i + 1].y)),
+//              cv::Scalar(0, 255, 0), 1, cv::LINE_8);
+//   }
+
+//   // for (const auto& coor : path) {
+//   //   img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[0] =
+//   0;
+//   //   img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[1] =
+//   //   255; img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x),
+//   static_cast<int>(coor.y))[2]
+//   //   = 0;
+
+//   //   cv::line(img, cv::Point(static_cast<int>(coor.x), static_cast<int>(coor.y)), p4,
+//   //            Scalar(255, 0, 0), thickness, LINE_8);
+//   // }
+//   return img;
+// }
+
+cv::Mat Environment::toImage(const anyangle::State2DList& expansions) {
   auto img = toImage();
-  for (const auto& coor : path) {
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[0] = 0;
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[1] = 255;
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(coor.x), static_cast<int>(coor.y))[2] = 0;
+  for (const auto& v : expansions) {
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[0] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[1] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[2] = 255;
   }
   return img;
+}
+
+cv::Mat Environment::toImage(const anyangle::State2DList& path,
+                             const anyangle::State2DList& expansions) {
+  // create expansions image first
+  auto img = toImage(expansions);
+
+  // draw path on it
+  drawPath(path, img);
+
+  return img;
+}
+
+void Environment::drawPath(const anyangle::State2DList& path, cv::Mat& img) {
+  for (std::size_t i = 0; i < path.size() - 1; ++i) {
+    cv::line(img, cv::Point(static_cast<int>(path[i].x), static_cast<int>(path[i].y)),
+             cv::Point(static_cast<int>(path[i + 1].x), static_cast<int>(path[i + 1].y)),
+             cv::Scalar(0, 255, 0), 1, cv::LINE_8);
+  }
 }
 
 }  // namespace map

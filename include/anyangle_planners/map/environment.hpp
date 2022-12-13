@@ -38,7 +38,9 @@ class Environment {
   cv::Mat convertToCVImageRGB();
 
   cv::Mat toImage();
-  cv::Mat toImage(const anyangle::State2DList& path);
+  cv::Mat toImage(const anyangle::State2DList& expansions);
+  cv::Mat toImage(const anyangle::State2DList& path, const anyangle::State2DList& expansions);
+  void drawPath(const anyangle::State2DList& path, cv::Mat& img);
 
  private:
   grid_map::GridMap map_;
