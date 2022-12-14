@@ -110,7 +110,7 @@ cv::Mat Environment::convertToCVImageRGB() {
   cv::Mat img, img_rgb;
   grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map_, "layer", CV_8U, img);
 
-  cv::transpose(img, img);
+  // cv::transpose(img, img);
 
   cv::cvtColor(img, img_rgb, CV_GRAY2BGR);
   return img_rgb;
@@ -144,9 +144,9 @@ cv::Mat Environment::toImage() { return convertToCVImageRGB(); }
 cv::Mat Environment::toImage(const anyangle::State2DList& expansions) {
   auto img = toImage();
   for (const auto& v : expansions) {
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[0] = 0;
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[1] = 0;
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[2] = 255;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.x), static_cast<int>(v.y))[0] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.x), static_cast<int>(v.y))[1] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.x), static_cast<int>(v.y))[2] = 255;
   }
   return img;
 }
@@ -164,9 +164,9 @@ cv::Mat Environment::toImage(const anyangle::State2DList& path,
 
 void Environment::drawPath(const anyangle::State2DList& path, cv::Mat& img) {
   for (std::size_t i = 0; i < path.size() - 1; ++i) {
-    cv::line(img, cv::Point(static_cast<int>(path[i].x), static_cast<int>(path[i].y)),
-             cv::Point(static_cast<int>(path[i + 1].x), static_cast<int>(path[i + 1].y)),
-             cv::Scalar(0, 255, 0), 1, cv::LINE_8);
+    cv::line(img, cv::Point(static_cast<int>(path[i].y), static_cast<int>(path[i].x)),
+             cv::Point(static_cast<int>(path[i + 1].y), static_cast<int>(path[i + 1].x)),
+             cv::Scalar(0, 255, 0), 2, cv::LINE_8);
   }
 }
 

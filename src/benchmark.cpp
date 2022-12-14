@@ -7,8 +7,10 @@
 #include <string>
 
 #include "anyangle_planners/algorithm/a_star.hpp"
+#include "anyangle_planners/algorithm/lazy_theta_star.hpp"
 #include "anyangle_planners/algorithm/planner.hpp"
 #include "anyangle_planners/algorithm/theta_star.hpp"
+#include "anyangle_planners/algorithm/weighted_lazy_theta_star.hpp"
 #include "anyangle_planners/map/environment.hpp"
 #include "anyangle_planners/map/scenario_loader.hpp"
 
@@ -38,7 +40,10 @@ int main(int argc, char const* argv[]) {
       moving_ai_lab::ScenarioLoaderPtr loader = std::make_shared<moving_ai_lab::ScenarioLoader>();
 
       moving_ai_lab::Scenario scenario;
-      loader->loadScenario(p.path().string(), scenario);
+      loader->loadScenario(
+          "/home/pk/Desktop/anyangle_ws/src/anyangle_planners/maps/street-scen/1024/"
+          "NewYork_0_1024.map.scen",
+          scenario);
 
       // create environment from scenario
       auto env = std::make_shared<Environment>();
@@ -47,14 +52,20 @@ int main(int argc, char const* argv[]) {
       // lets create an example planner
       auto planner1 = std::make_shared<AStar>("astar");
       auto planner2 = std::make_shared<ThetaStar>("thetastar");
+      auto planner3 = std::make_shared<LazyThetaStar>("lazythetastar");
+      auto planner4 = std::make_shared<WeightedLazyThetaStar>("wlazythetastar");
 
       // provide an environment
       planner1->setEnvironment(env);
       planner2->setEnvironment(env);
+      planner3->setEnvironment(env);
+      planner4->setEnvironment(env);
 
       std::vector<PlannerPtr> planners;
       // planners.push_back(planner1);
-      planners.push_back(planner2);
+      // planners.push_back(planner2);
+      // planners.push_back(planner3);
+      planners.push_back(planner4);
 
       // run all the experiments inside scenario for each planner
       for (std::size_t planner_id = 0; planner_id < planners.size(); ++planner_id) {
@@ -68,7 +79,8 @@ int main(int argc, char const* argv[]) {
         std::vector<double> path_costs;
         std::vector<unsigned> run_times;
 
-        for (std::size_t i = 100; i < scenario.experiments.size(); ++i) {
+        for (std::size_t i = scenario.experiments.size() - 1; i < scenario.experiments.size();
+             ++i) {
           auto start_x = scenario.experiments[i].start_x;
           auto start_y = scenario.experiments[i].start_y;
           auto goal_x = scenario.experiments[i].goal_x;
@@ -77,6 +89,10 @@ int main(int argc, char const* argv[]) {
           std::cout << "Experiment No." << i << " : start_x: " << start_x
                     << ", start_y: " << start_y << ", goal_x: " << goal_x << ", goal_y: " << goal_y
                     << std::endl;
+
+          // auto img = env->toImage();
+          // cv::imwrite("test.jpg", img);
+          // return 0;
 
           // solve
           auto start_time = std::chrono::high_resolution_clock::now();
@@ -90,8 +106,8 @@ int main(int argc, char const* argv[]) {
           if (solved) {
             auto bucket = scenario.experiments[i].bucket;
 
-            path_costs.push_back(planners[planner_id]->getPathCost());
-            run_times.push_back(elapsed_time_ms);
+            // path_costs.push_back(planners[planner_id]->getPathCost());
+            // run_times.push_back(elapsed_time_ms);
 
             std::cout << "Experiment " << i << ", Bucket " << bucket
                       << " solved with path length of " << planners[planner_id]->getPathCost()
@@ -104,6 +120,11 @@ int main(int argc, char const* argv[]) {
             planners[planner_id]->getNodeExpansions(closelist);
             std::cout << "Number of node expansions: " << closelist.size() << std::endl;
 
+            // std::shared_ptr<ThetaStar> theta_star =
+            //     std::dynamic_pointer_cast<ThetaStar>(planners[planner_id]);
+            // std::cout << "Number of line of sight checks: "
+            //           << theta_star->getLineOfSightCheckCount() << std::endl;
+
             // {
             //   out << std::to_string(i) << " " << std::to_string(bucket) << " "
             //       << std::to_string(planners[planner_id]->getPathCost()) << " "
@@ -111,12 +132,17 @@ int main(int argc, char const* argv[]) {
             // }
 
             // get the solution path
-            anyangle::State2DList path;
-            planners[planner_id]->getSolutionPath(path);
+            // anyangle::State2DList path;
+            // planners[planner_id]->getSolutionPath(path);
 
-            std::cout << "Path size: " << path.size() << std::endl;
+            // std::cout << "Path size: " << path.size() << std::endl;
 
-            auto img = env->toImage(path, closelist);
+            // auto img = env->toImage(path, closelist);
+            auto img = env->toImage(closelist);
+
+            // auto img = env->toImage();
+            // env->drawPath(path, img);
+
             cv::imwrite("test.jpg", img);
 
             return 0;

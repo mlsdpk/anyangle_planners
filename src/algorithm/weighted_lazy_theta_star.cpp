@@ -1,11 +1,11 @@
-#include "anyangle_planners/algorithm/lazy_theta_star.hpp"
+#include "anyangle_planners/algorithm/weighted_lazy_theta_star.hpp"
 
 namespace anyangle {
 namespace algorithm {
 
-LazyThetaStar::LazyThetaStar(const std::string& name) : ThetaStar(name) {}
+WeightedLazyThetaStar::WeightedLazyThetaStar(const std::string& name) : ThetaStar(name) {}
 
-bool LazyThetaStar::solve(const State2D& start, const State2D& goal) {
+bool WeightedLazyThetaStar::solve(const State2D& start, const State2D& goal) {
   // if no environment is given, return false
   if (!env_) {
     std::cerr << "No environment provided.\n";
@@ -109,9 +109,106 @@ bool LazyThetaStar::solve(const State2D& start, const State2D& goal) {
         open_list_.push(neighbor);
       }
     }
+
+    line_of_sight_checks_++;
+
+    // we also jump the search
+    // we also jump from parent to goal vertex
+    int x, y;
+    if (!lineOfSightWithIndex(v_min, goal_vertex_, x, y)) {
+      auto jumped_neighbor = addToGraph(getNodeIndex(x, y, env_width_));
+
+      // update this neighbor g-value, h-value and parent
+      jumped_neighbor->parent_vertex = v_min;
+      jumped_neighbor->g_cost = v_min->g_cost + distanceCost(*v_min, *jumped_neighbor);
+      jumped_neighbor->h_cost = costToGoHeuristics(toState2D(*jumped_neighbor, env_width_),
+                                                   toState2D(*goal_vertex_, env_width_));
+
+      // add neighbor to priority queue
+      jumped_neighbor->updateKey();
+      open_list_.push(jumped_neighbor);
+    } else {
+      goal_vertex_->parent_vertex = v_min;
+      goal_vertex_->g_cost = v_min->g_cost + distanceCost(*v_min, *goal_vertex_);
+      solved = true;
+      break;
+    }
   }
 
   return solved;
+}
+
+bool WeightedLazyThetaStar::lineOfSightWithIndex(const astar::VertexConstPtr& from,
+                                                 const astar::VertexConstPtr& to, int& x,
+                                                 int& y) const {
+  return lineOfSightWithIndex(toState2D(*from, env_width_), toState2D(*to, env_width_), x, y);
+}
+
+bool WeightedLazyThetaStar::lineOfSightWithIndex(const anyangle::State2D& from,
+                                                 const anyangle::State2D& to, int& x,
+                                                 int& y) const {
+  const int x0 = from.x;
+  const int y0 = from.y;
+  const int x1 = to.x;
+  const int y1 = to.y;
+
+  int cx, cy;
+  int dy = abs(y1 - y0), dx = abs(x1 - x0), f = 0;
+  int sx, sy;
+  sx = x1 > x0 ? 1 : -1;
+  sy = y1 > y0 ? 1 : -1;
+
+  int u_x = (sx - 1) / 2;
+  int u_y = (sy - 1) / 2;
+  cx = x0;
+  cy = y0;
+
+  if (dx >= dy) {
+    while (cx != x1) {
+      f += dy;
+      if (f >= dx) {
+        if (env_->inCollision(cx + u_x, cy + u_y)) {
+          return false;
+        }
+        cy += sy;
+        f -= dx;
+      }
+      if (f != 0 && env_->inCollision(cx + u_x, cy + u_y)) {
+        return false;
+      }
+      if (dy == 0 && env_->inCollision(cx + u_x, cy) && env_->inCollision(cx + u_x, cy - 1)) {
+        return false;
+      }
+      x = cx + u_x;
+      y = cy + u_y;
+
+      cx += sx;
+    }
+  } else {
+    while (cy != y1) {
+      x = cx + u_x;
+      y = cy + u_y;
+      f = f + dx;
+      if (f >= dy) {
+        if (env_->inCollision(cx + u_x, cy + u_y)) {
+          return false;
+        }
+        cx += sx;
+        f -= dy;
+      }
+      if (f != 0 && env_->inCollision(cx + u_x, cy + u_y)) {
+        return false;
+      }
+      if (dx == 0 && env_->inCollision(cx, cy + u_y) && env_->inCollision(cx - 1, cy + u_y)) {
+        return false;
+      }
+      x = cx + u_x;
+      y = cy + u_y;
+
+      cy += sy;
+    }
+  }
+  return true;
 }
 
 }  // namespace algorithm

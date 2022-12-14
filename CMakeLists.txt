@@ -18,6 +18,8 @@ add_executable(benchmark
     src/algorithm/a_star.cpp
     src/algorithm/planner.cpp
     src/algorithm/theta_star.cpp
+    src/algorithm/lazy_theta_star.cpp
+    src/algorithm/weighted_lazy_theta_star.cpp
     src/map/environment.cpp
     src/map/scenario_loader.cpp)
 

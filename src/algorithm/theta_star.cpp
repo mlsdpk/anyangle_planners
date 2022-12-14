@@ -40,6 +40,8 @@ bool ThetaStar::solve(const State2D& start, const State2D& goal) {
   // std::cout << "Start idx: " << start_vertex_->index << std::endl;
   // std::cout << "Goal idx: " << goal_vertex_->index << std::endl;
 
+  line_of_sight_checks_ = 0u;
+
   // add start vertex into expansion queue (openlist)
   start_vertex_->g_cost = 0.0;
   start_vertex_->h_cost = costToGoHeuristics(toState2D(*start_vertex_, env_width_),
@@ -104,6 +106,8 @@ bool ThetaStar::solve(const State2D& start, const State2D& goal) {
           open_list_.push(neighbor);
         }
       }
+
+      line_of_sight_checks_++;
     }
   }
 
