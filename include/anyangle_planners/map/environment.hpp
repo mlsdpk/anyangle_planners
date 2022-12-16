@@ -5,16 +5,21 @@
 #include <memory>
 #include <opencv2/opencv.hpp>
 
+#include "anyangle_planners/graph/state_space.hpp"
 #include "anyangle_planners/map/scenario.hpp"
-#include "anyangle_planners/state_space.hpp"
 
 namespace anyangle {
 namespace map {
 
-enum class EnvironmentType { IMAGE = 0, MovingAILabScenario = 1 };
+enum class EnvironmentType
+{
+  IMAGE = 0,
+  MovingAILabScenario = 1
+};
 
-class Environment {
- public:
+class Environment
+{
+public:
   Environment() = default;
 
   bool initializeFromImage(const std::string& path_to_image, const double resolution);
@@ -28,7 +33,7 @@ class Environment {
    */
   bool initializeFromMovingAILabScenario(const moving_ai_lab::Scenario& scenario);
 
-  bool inCollision(const State2D& state) const;
+  bool inCollision(const anyangle::graph::State2D& state) const;
   bool inCollision(const unsigned int x, const unsigned int y) const;
 
   unsigned int getWidth() const { return map_.getSize()(0); }
@@ -38,11 +43,12 @@ class Environment {
   cv::Mat convertToCVImageRGB();
 
   cv::Mat toImage();
-  cv::Mat toImage(const anyangle::State2DList& expansions);
-  cv::Mat toImage(const anyangle::State2DList& path, const anyangle::State2DList& expansions);
-  void drawPath(const anyangle::State2DList& path, cv::Mat& img);
+  cv::Mat toImage(const anyangle::graph::State2DList& expansions);
+  cv::Mat toImage(const anyangle::graph::State2DList& path,
+                  const anyangle::graph::State2DList& expansions);
+  void drawPath(const anyangle::graph::State2DList& path, cv::Mat& img);
 
- private:
+private:
   grid_map::GridMap map_;
 };
 

@@ -14,19 +14,18 @@ bool LazyThetaStar::solve(const State2D& start, const State2D& goal) {
 
   env_width_ = env_->getWidth();
   env_height_ = env_->getHeight();
-  // std::cout << "Received environment of size " << env_width_ << " x " << env_height_ <<
-  // std::endl;
+  std::cout << "Received environment of size " << env_width_ << " x " << env_height_ << std::endl;
 
   // start and goal must be within bounds
   if (start.x < 0 || start.x >= env_width_ || goal.x < 0 || goal.x >= env_width_ || start.y < 0 ||
       start.y >= env_height_ || goal.x < 0 || goal.y >= env_height_) {
-    // std::cerr << "Start and goal must be within bounds.\n";
+    std::cerr << "Start and goal must be within bounds.\n";
     return false;
   }
 
   // start and goal must be collison free
   if (env_->inCollision(start) || env_->inCollision(goal)) {
-    // std::cerr << "Start and goal must be collision free.\n";
+    std::cerr << "Start and goal must be collision free.\n";
     return false;
   }
 
@@ -37,8 +36,8 @@ bool LazyThetaStar::solve(const State2D& start, const State2D& goal) {
   start_vertex_ = addToGraph(getNodeIndex(start.x, start.y, env_width_));
   goal_vertex_ = addToGraph(getNodeIndex(goal.x, goal.y, env_width_));
 
-  // std::cout << "Start idx: " << start_vertex_->index << std::endl;
-  // std::cout << "Goal idx: " << goal_vertex_->index << std::endl;
+  std::cout << "Start idx: " << start_vertex_->index << std::endl;
+  std::cout << "Goal idx: " << goal_vertex_->index << std::endl;
 
   line_of_sight_checks_ = 0u;
 
@@ -52,6 +51,8 @@ bool LazyThetaStar::solve(const State2D& start, const State2D& goal) {
   open_list_.push(start_vertex_);
 
   bool solved = false;
+
+  std::cout << "here\n";
 
   while (!open_list_.empty()) {
     astar::VertexPtr v_min = open_list_.top();

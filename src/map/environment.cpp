@@ -3,11 +3,14 @@
 namespace anyangle {
 namespace map {
 
-bool Environment::initializeFromImage(const std::string& path_to_image, const double resolution) {
+bool Environment::initializeFromImage(const std::string& path_to_image, const double resolution)
+{
   cv::Mat image;
-  try {
+  try
+  {
     image = cv::imread(path_to_image, cv::IMREAD_GRAYSCALE);
-  } catch (const std::exception& e) {
+  } catch (const std::exception& e)
+  {
     std::cerr << "Error: failed to load image " << path_to_image << ": " << e.what() << '\n';
   }
 
@@ -16,20 +19,24 @@ bool Environment::initializeFromImage(const std::string& path_to_image, const do
                                                     grid_map::Position(0.0, 0.0));
 
   // create gridmap layer from image
-  if (!grid_map::GridMapCvConverter::addLayerFromImage<unsigned char, 1>(image, "layer", map_)) {
+  if (!grid_map::GridMapCvConverter::addLayerFromImage<unsigned char, 1>(image, "layer", map_))
+  {
     std::cerr << "Failed to create environment map from image " << path_to_image << std::endl;
   }
 }
 
-bool Environment::initializeFromMovingAILabScenario(const moving_ai_lab::Scenario& scenario) {
+bool Environment::initializeFromMovingAILabScenario(const moving_ai_lab::Scenario& scenario)
+{
   // check the scenario version is supported or not
-  if (scenario.version != "1") {
+  if (scenario.version != "1")
+  {
     std::cerr << "Only version 1 is currently supported for Moving AI Lab scenario.\n";
     return false;
   }
 
   // must contain at least one experiment
-  if (scenario.experiments.empty()) {
+  if (scenario.experiments.empty())
+  {
     std::cerr << "Scenario must contain at least one experiment.\n";
     return false;
   }
@@ -39,14 +46,16 @@ bool Environment::initializeFromMovingAILabScenario(const moving_ai_lab::Scenari
   std::string map_name = scenario.experiments.front().map_name;
 
   std::ifstream map_file(map_name);
-  if (map_file.fail() && scenario.name.find('/') != std::string::npos) {
+  if (map_file.fail() && scenario.name.find('/') != std::string::npos)
+  {
     map_name = scenario.name.substr(0, scenario.name.find_last_of('/')) + "/" + map_name;
   }
 
   std::cout << "Loading Moving AI Lab scenario map from " << map_name << std::endl;
   map_file = std::ifstream(map_name);
 
-  if (map_file.fail()) {
+  if (map_file.fail())
+  {
     std::cerr << "Failed to load map file from " << map_name << std::endl;
   }
 
@@ -65,11 +74,16 @@ bool Environment::initializeFromMovingAILabScenario(const moving_ai_lab::Scenari
   std::vector<bool> temp_map;
   temp_map.reserve(width * height);
 
-  for (std::string line; std::getline(map_file, line);) {
-    for (std::string::iterator it = line.begin(); it != line.end(); ++it) {
-      if ((*it) == '.') {
+  for (std::string line; std::getline(map_file, line);)
+  {
+    for (std::string::iterator it = line.begin(); it != line.end(); ++it)
+    {
+      if ((*it) == '.')
+      {
         temp_map.push_back(true);
-      } else if ((*it) == '@') {
+      }
+      else if ((*it) == '@')
+      {
         temp_map.push_back(false);
       }
     }
@@ -83,7 +97,8 @@ bool Environment::initializeFromMovingAILabScenario(const moving_ai_lab::Scenari
   grid_map::Matrix& data = map_["layer"];
 
   std::size_t i = 0u;
-  for (grid_map::GridMapIterator iterator(map_); !iterator.isPastEnd(); ++iterator) {
+  for (grid_map::GridMapIterator iterator(map_); !iterator.isPastEnd(); ++iterator)
+  {
     const grid_map::Index gridMapIndex = *iterator;
     const grid_map::Index imageIndex = iterator.getUnwrappedIndex();
     data(gridMapIndex(1), gridMapIndex(0)) = temp_map[i] ? 1.0 : 0.0;
@@ -98,15 +113,18 @@ bool Environment::initializeFromMovingAILabScenario(const moving_ai_lab::Scenari
   return true;
 }
 
-bool Environment::inCollision(const State2D& state) const {
+bool Environment::inCollision(const anyangle::graph::State2D& state) const
+{
   return inCollision(static_cast<unsigned>(state.x), static_cast<unsigned>(state.y));
 }
 
-bool Environment::inCollision(const unsigned int x, const unsigned int y) const {
-  return map_.at("layer", grid_map::Index(x, y)) == 0.0 ? true : false;
+bool Environment::inCollision(const unsigned int x, const unsigned int y) const
+{
+  return map_.at("layer", grid_map::Index(y, x)) == 0.0 ? true : false;
 }
 
-cv::Mat Environment::convertToCVImageRGB() {
+cv::Mat Environment::convertToCVImageRGB()
+{
   cv::Mat img, img_rgb;
   grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map_, "layer", CV_8U, img);
 
@@ -118,7 +136,7 @@ cv::Mat Environment::convertToCVImageRGB() {
 
 cv::Mat Environment::toImage() { return convertToCVImageRGB(); }
 
-// cv::Mat Environment::toImage(const anyangle::State2DList& path) {
+// cv::Mat Environment::toImage(const anyangle::anyangle::graph::State2DList& path) {
 //   auto img = toImage();
 
 //   for (std::size_t i = 0; i < path.size() - 1; ++i) {
@@ -141,18 +159,21 @@ cv::Mat Environment::toImage() { return convertToCVImageRGB(); }
 //   return img;
 // }
 
-cv::Mat Environment::toImage(const anyangle::State2DList& expansions) {
+cv::Mat Environment::toImage(const anyangle::graph::State2DList& expansions)
+{
   auto img = toImage();
-  for (const auto& v : expansions) {
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.x), static_cast<int>(v.y))[0] = 0;
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.x), static_cast<int>(v.y))[1] = 0;
-    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.x), static_cast<int>(v.y))[2] = 255;
+  for (const auto& v : expansions)
+  {
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[0] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[1] = 0;
+    img.at<cv::Vec<unsigned char, 3>>(static_cast<int>(v.y), static_cast<int>(v.x))[2] = 255;
   }
   return img;
 }
 
-cv::Mat Environment::toImage(const anyangle::State2DList& path,
-                             const anyangle::State2DList& expansions) {
+cv::Mat Environment::toImage(const anyangle::graph::State2DList& path,
+                             const anyangle::graph::State2DList& expansions)
+{
   // create expansions image first
   auto img = toImage(expansions);
 
@@ -162,10 +183,12 @@ cv::Mat Environment::toImage(const anyangle::State2DList& path,
   return img;
 }
 
-void Environment::drawPath(const anyangle::State2DList& path, cv::Mat& img) {
-  for (std::size_t i = 0; i < path.size() - 1; ++i) {
-    cv::line(img, cv::Point(static_cast<int>(path[i].y), static_cast<int>(path[i].x)),
-             cv::Point(static_cast<int>(path[i + 1].y), static_cast<int>(path[i + 1].x)),
+void Environment::drawPath(const anyangle::graph::State2DList& path, cv::Mat& img)
+{
+  for (std::size_t i = 0; i < path.size() - 1; ++i)
+  {
+    cv::line(img, cv::Point(static_cast<int>(path[i].x), static_cast<int>(path[i].y)),
+             cv::Point(static_cast<int>(path[i + 1].x), static_cast<int>(path[i + 1].y)),
              cv::Scalar(0, 255, 0), 2, cv::LINE_8);
   }
 }

@@ -4,14 +4,17 @@
 #include <memory>
 #include <string>
 
+#include "anyangle_planners/graph/state_space.hpp"
 #include "anyangle_planners/map/environment.hpp"
-#include "anyangle_planners/state_space.hpp"
+#include "anyangle_planners/utils/conversions.hpp"
+#include "anyangle_planners/utils/distance.hpp"
 
 namespace anyangle {
 namespace algorithm {
 
-class Planner {
- public:
+class Planner
+{
+public:
   // non-copyable
   Planner(const Planner &) = delete;
   Planner &operator=(const Planner &) = delete;
@@ -19,7 +22,7 @@ class Planner {
   /**
    * @brief Constructor
    *
-   * @param name
+   * @param name Name of the planner
    */
   explicit Planner(const std::string &name);
 
@@ -30,77 +33,60 @@ class Planner {
   virtual ~Planner() = default;
 
   /**
-   * @brief
+   * @brief Function for resetting internal data structures.
    *
    */
   virtual void reset() = 0;
 
   /**
-   * @brief
+   * @brief Main planning function to be implemented by the derived classes.
    *
-   * @return true
-   * @return false
+   * @return true if planning is solved otherwise false
    */
-  virtual bool solve([[maybe_unused]] const State2D &start,
-                     [[maybe_unused]] const State2D &goal) = 0;
+  virtual bool solve([[maybe_unused]] const graph::State2D &start,
+                     [[maybe_unused]] const graph::State2D &goal) = 0;
 
   /**
-   * @brief Get the Node Expansions object
+   * @brief Get the nodes expanded by the planning algorithm.
    *
-   * @param nodes
+   * @param nodes expanded nodes.
    */
-  virtual void getNodeExpansions([[maybe_unused]] State2DList &nodes) = 0;
+  virtual void getNodeExpansions([[maybe_unused]] graph::State2DList &nodes) const = 0;
 
   /**
-   * @brief Get the Total Memory object
+   * @brief Get the total memory usage of the planner.
    *
    * @return std::size_t
    */
-  virtual std::size_t getTotalMemory() = 0;
+  [[nodiscard]] virtual std::size_t getTotalMemory() const = 0;
 
+  /**
+   * @brief Set the planning environment.
+   *
+   * @param env User-defined environment map.
+   */
   void setEnvironment(map::EnvironmentConstPtr env) { env_ = env; }
 
   /**
-   * @brief Get the Solution Path object
+   * @brief Get the solution path after planning is succeeded.
    *
-   * @return State2DList
+   * @return True if solution path exists False otherwise.
    */
-  virtual bool getSolutionPath([[maybe_unused]] State2DList &path) const { return false; }
+  [[nodiscard]] virtual bool getSolutionPath([[maybe_unused]] graph::State2DList &path) const = 0;
 
   /**
-   * @brief Get the Path Cost object
+   * @brief Get the cost of the solution path.
    *
-   * @return double
+   * @return solution cost.
    */
-  virtual double getPathCost() const { return 0.0; }
+  [[nodiscard]] virtual double getPathCost() const = 0;
 
-  inline unsigned int getNodeIndex(const unsigned int &x, const unsigned int &y,
-                                   const unsigned int &width) {
-    return x + y * width;
-  }
-
-  inline double octileDistance(const State2D &s1, const State2D &s2) const {
-    const auto dx = std::fabs(s1.x - s2.x);
-    const auto dy = std::fabs(s1.y - s2.y);
-
-    if (dx > dy) return 1.0 * (dx - dy) + std::sqrt(2.0) * dy;
-    return 1.0 * (dy - dx) + std::sqrt(2.0) * dx;
-  }
-
-  inline double distanceCost(const State2D &s1, const State2D &s2) const {
-    return std::sqrt((s1.x - s2.x) * (s1.x - s2.x) + (s1.y - s2.y) * (s1.y - s2.y));
-  }
-
-  inline double costToGoHeuristics(const State2D &s1, const State2D &s2) const {
-    return std::sqrt((s1.x - s2.x) * (s1.x - s2.x) + (s1.y - s2.y) * (s1.y - s2.y));
-  }
-
- protected:
+protected:
   //// The name of the planner
   std::string name_;
 
   //// Solution path
-  State2DList path_;
+  graph::State2DList path_;
 
   //// Shared ptr to environment
   map::EnvironmentConstPtr env_;

@@ -5,6 +5,45 @@ namespace algorithm {
 
 WeightedLazyThetaStar::WeightedLazyThetaStar(const std::string& name) : ThetaStar(name) {}
 
+void WeightedLazyThetaStar::reset() {
+  // set 8-connectivity
+  neighbors_grid_offsets_ = {-1,
+                             +1,
+                             -static_cast<int>(env_width_),
+                             +static_cast<int>(env_width_),
+                             -static_cast<int>(env_width_) - 1,
+                             -static_cast<int>(env_width_) + 1,
+                             +static_cast<int>(env_width_) - 1,
+                             +static_cast<int>(env_width_) + 1};
+
+  // clear the graph
+  graph_.clear();
+
+  // initialize ASTAR by clearing open list and add start node
+  while (!start_open_list_.empty()) {
+    start_open_list_.pop();
+  }
+  while (!goal_open_list_.empty()) {
+    goal_open_list_.pop();
+  }
+
+  start_close_list_.clear();
+  goal_close_list_.clear();
+}
+
+void WeightedLazyThetaStar::getStartNodeExpansions(State2DList& nodes) {
+  nodes = start_close_list_;
+}
+
+void WeightedLazyThetaStar::getGoalNodeExpansions(State2DList& nodes) { nodes = goal_close_list_; }
+
+void WeightedLazyThetaStar::getNodeExpansions(State2DList& nodes) {
+  nodes.insert(nodes.end(), start_close_list_.begin(), start_close_list_.end());
+  nodes.insert(nodes.end(), goal_close_list_.begin(), goal_close_list_.end());
+}
+
+bool WeightedLazyThetaStar::getSolutionPath(State2DList& path) const { return true; }
+
 bool WeightedLazyThetaStar::solve(const State2D& start, const State2D& goal) {
   // if no environment is given, return false
   if (!env_) {
@@ -42,96 +81,140 @@ bool WeightedLazyThetaStar::solve(const State2D& start, const State2D& goal) {
 
   line_of_sight_checks_ = 0u;
 
-  // add start vertex into expansion queue (openlist)
+  // add start vertex and goal vertex into expansion queues (openlist)
   start_vertex_->g_cost = 0.0;
+  goal_vertex_->g_cost = 0.0;
   start_vertex_->h_cost = costToGoHeuristics(toState2D(*start_vertex_, env_width_),
                                              toState2D(*goal_vertex_, env_width_));
+  goal_vertex_->h_cost = costToGoHeuristics(toState2D(*goal_vertex_, env_width_),
+                                            toState2D(*start_vertex_, env_width_));
   start_vertex_->updateKey();
+  goal_vertex_->updateKey();
   start_vertex_->parent_vertex = start_vertex_;
+  goal_vertex_->parent_vertex = goal_vertex_;
 
-  open_list_.push(start_vertex_);
+  start_open_list_.push(start_vertex_);
+  goal_open_list_.push(goal_vertex_);
+
+  forward_search_g_table_[start_vertex_] = start_vertex_->g_cost;
+  backward_search_g_table_[goal_vertex_] = goal_vertex_->g_cost;
 
   bool solved = false;
 
-  while (!open_list_.empty()) {
-    astar::VertexPtr v_min = open_list_.top();
-    v_min->visited = true;
-    open_list_.pop();
-    close_list_.push_back(toState2D(*v_min, env_width_));
+  while (!start_open_list_.empty() && !goal_open_list_.empty()) {
+    astar::VertexPtr start_v_min = start_open_list_.top();
+    astar::VertexPtr goal_v_min = goal_open_list_.top();
 
-    // if expanded vertex is goal, solved
-    if (v_min == goal_vertex_) {
-      solved = true;
-      break;
-    }
+    start_v_min->visited = true;
+    goal_v_min->visited = true;
+    start_v_min->in_start_closelist = true;
+    goal_v_min->in_goal_closelist = true;
+
+    start_open_list_.pop();
+    goal_open_list_.pop();
+    start_close_list_.push_back(toState2D(*start_v_min, env_width_));
+    goal_close_list_.push_back(toState2D(*goal_v_min, env_width_));
+
+    // if they have line of sight, then solved (not optimal)
+    // if (lineOfSight(start_v_min, goal_v_min)) {
+    //   solved = true;
+    //   break;
+    // }
+
+    // stop only when g-values of each expanded vertex
 
     // get all the neighbors that are collison-free and within map bounds
-    astar::VertexList neighbors;
-    getNeighbors(v_min, neighbors);
+    astar::VertexList start_v_min_neighbors, goal_v_min_neighbors;
+    getNeighbors(start_v_min, start_v_min_neighbors);
+    getNeighbors(goal_v_min, goal_v_min_neighbors);
 
     // if no line of sight, reset the parent and connect to better neighbor
-    if (!lineOfSight(v_min->parent_vertex, v_min)) {
-      v_min->g_cost = std::numeric_limits<double>::infinity();
-      for (auto itr = neighbors.begin(); itr != neighbors.end(); ++itr) {
+    if (!lineOfSight(start_v_min->parent_vertex, start_v_min)) {
+      start_v_min->g_cost = std::numeric_limits<double>::infinity();
+      for (auto itr = start_v_min_neighbors.begin(); itr != start_v_min_neighbors.end(); ++itr) {
         auto neighbor = *itr;
 
-        double g_new_neighbor = neighbor->g_cost + distanceCost(*neighbor, *v_min);
+        double g_new_neighbor = neighbor->g_cost + distanceCost(*neighbor, *start_v_min);
 
         // if this neighbor is better, choose it as parent
-        if (g_new_neighbor < v_min->g_cost) {
+        if (g_new_neighbor < start_v_min->g_cost) {
           // update this neighbor g-value, h-value and parent
-          v_min->parent_vertex = neighbor;
-          v_min->g_cost = g_new_neighbor;
-          v_min->updateKey();
+          start_v_min->parent_vertex = neighbor;
+          start_v_min->g_cost = g_new_neighbor;
+          start_v_min->updateKey();
         }
       }
     }
 
-    line_of_sight_checks_++;
+    // if no line of sight, reset the parent and connect to better neighbor
+    if (!lineOfSight(goal_v_min->parent_vertex, goal_v_min)) {
+      goal_v_min->g_cost = std::numeric_limits<double>::infinity();
+      for (auto itr = goal_v_min_neighbors.begin(); itr != goal_v_min_neighbors.end(); ++itr) {
+        auto neighbor = *itr;
 
-    for (auto itr = neighbors.begin(); itr != neighbors.end(); ++itr) {
+        double g_new_neighbor = neighbor->g_cost + distanceCost(*neighbor, *goal_v_min);
+
+        // if this neighbor is better, choose it as parent
+        if (g_new_neighbor < goal_v_min->g_cost) {
+          // update this neighbor g-value, h-value and parent
+          goal_v_min->parent_vertex = neighbor;
+          goal_v_min->g_cost = g_new_neighbor;
+          goal_v_min->updateKey();
+        }
+      }
+    }
+
+    line_of_sight_checks_ = line_of_sight_checks_ + 2;
+
+    for (auto itr = start_v_min_neighbors.begin(); itr != start_v_min_neighbors.end(); ++itr) {
       auto neighbor = *itr;
 
       if (neighbor->visited) continue;
 
+      if (neighbor->in_goal_closelist) {
+        const auto current_solution_cost = start_v_min->g_cost +
+                                           distanceCost(*start_v_min->parent_vertex, *neighbor) +
+                                           neighbor->g_cost;
+        if ((start_v_min->g_cost + distanceCost(*start_v_min->parent_vertex, *neighbor) +
+             neighbor->g_cost) < best_cost_) {
+        }
+      }
+
       const double g_new_neighbor =
-          v_min->parent_vertex->g_cost + distanceCost(*v_min->parent_vertex, *neighbor);
+          start_v_min->parent_vertex->g_cost + distanceCost(*start_v_min->parent_vertex, *neighbor);
 
       if (g_new_neighbor < neighbor->g_cost) {
         // update this neighbor g-value, h-value and parent
-        neighbor->parent_vertex = v_min->parent_vertex;
+        neighbor->parent_vertex = start_v_min->parent_vertex;
         neighbor->g_cost = g_new_neighbor;
         neighbor->h_cost = costToGoHeuristics(toState2D(*neighbor, env_width_),
                                               toState2D(*goal_vertex_, env_width_));
 
         // add neighbor to priority queue
         neighbor->updateKey();
-        open_list_.push(neighbor);
+        start_open_list_.push(neighbor);
       }
     }
 
-    line_of_sight_checks_++;
+    for (auto itr = goal_v_min_neighbors.begin(); itr != goal_v_min_neighbors.end(); ++itr) {
+      auto neighbor = *itr;
 
-    // we also jump the search
-    // we also jump from parent to goal vertex
-    int x, y;
-    if (!lineOfSightWithIndex(v_min, goal_vertex_, x, y)) {
-      auto jumped_neighbor = addToGraph(getNodeIndex(x, y, env_width_));
+      if (neighbor->visited) continue;
 
-      // update this neighbor g-value, h-value and parent
-      jumped_neighbor->parent_vertex = v_min;
-      jumped_neighbor->g_cost = v_min->g_cost + distanceCost(*v_min, *jumped_neighbor);
-      jumped_neighbor->h_cost = costToGoHeuristics(toState2D(*jumped_neighbor, env_width_),
-                                                   toState2D(*goal_vertex_, env_width_));
+      const double g_new_neighbor =
+          goal_v_min->parent_vertex->g_cost + distanceCost(*goal_v_min->parent_vertex, *neighbor);
 
-      // add neighbor to priority queue
-      jumped_neighbor->updateKey();
-      open_list_.push(jumped_neighbor);
-    } else {
-      goal_vertex_->parent_vertex = v_min;
-      goal_vertex_->g_cost = v_min->g_cost + distanceCost(*v_min, *goal_vertex_);
-      solved = true;
-      break;
+      if (g_new_neighbor < neighbor->g_cost) {
+        // update this neighbor g-value, h-value and parent
+        neighbor->parent_vertex = goal_v_min->parent_vertex;
+        neighbor->g_cost = g_new_neighbor;
+        neighbor->h_cost = costToGoHeuristics(toState2D(*neighbor, env_width_),
+                                              toState2D(*start_vertex_, env_width_));
+
+        // add neighbor to priority queue
+        neighbor->updateKey();
+        goal_open_list_.push(neighbor);
+      }
     }
   }
 

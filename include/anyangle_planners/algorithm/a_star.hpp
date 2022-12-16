@@ -9,8 +9,13 @@ namespace anyangle {
 namespace algorithm {
 namespace astar {
 
-class Vertex {
- public:
+/**
+ * @brief
+ *
+ */
+class Vertex
+{
+  public:
   explicit Vertex(const unsigned int index) : index{index} {}
 
   ////
@@ -22,6 +27,8 @@ class Vertex {
   double h_cost{std::numeric_limits<double>::infinity()};
 
   bool visited{false};
+  bool in_start_closelist{false};
+  bool in_goal_closelist{false};
 
   //// parent vertex to this vertex
   std::shared_ptr<Vertex> parent_vertex;
@@ -35,7 +42,8 @@ class Vertex {
    * @brief
    *
    */
-  void updateKey() {
+  void updateKey()
+  {
     f_cost = g_cost + h_cost;
     key = std::make_pair(f_cost, g_cost);
   }
@@ -47,9 +55,11 @@ typedef std::shared_ptr<const Vertex> VertexConstPtr;
 
 // custom function for returning minimum distance vertex
 // to be used in priority queue
-struct VertexComparator {
+struct VertexComparator
+{
   // operator overloading
-  bool operator()(const VertexConstPtr v1, const VertexConstPtr v2) const {
+  bool operator()(const VertexConstPtr v1, const VertexConstPtr v2) const
+  {
     // std::pair support lexicographical comparison
     // which is convenient for us to implement the comparison
     // without writing additional code
@@ -59,8 +69,9 @@ struct VertexComparator {
 
 }  // namespace astar
 
-class AStar : public Planner {
- public:
+class AStar : public Planner
+{
+  public:
   using Graph = std::unordered_map<unsigned int, astar::VertexPtr>;
 
   /**
@@ -74,9 +85,9 @@ class AStar : public Planner {
 
   bool solve(const State2D &start, const State2D &goal) override;
 
-  void getNodeExpansions(State2DList &nodes) override;
+  void getNodeExpansions(State2DList &nodes) const override;
 
-  std::size_t getTotalMemory() override;
+  [[nodiscard]] std::size_t getTotalMemory() const override;
 
   bool getSolutionPath(State2DList &path) const override;
 
@@ -84,15 +95,18 @@ class AStar : public Planner {
 
   astar::VertexPtr addToGraph(const unsigned int &index);
 
-  anyangle::State2D toState2D(const astar::Vertex &v, const unsigned int width) const {
+  anyangle::State2D toState2D(const astar::Vertex &v, const unsigned int width) const
+  {
     return anyangle::State2D(v.index % width, v.index / width);
   }
 
-  anyangle::State2D toState2D(const unsigned int index, const unsigned int width) const {
+  anyangle::State2D toState2D(const unsigned int index, const unsigned int width) const
+  {
     return anyangle::State2D(index % width, index / width);
   }
 
-  inline double distanceCost(const astar::Vertex &v1, const astar::Vertex &v2) const {
+  inline double distanceCost(const astar::Vertex &v1, const astar::Vertex &v2) const
+  {
     // return Planner::octileDistance(toState2D(v1, env_width_), toState2D(v2, env_width_));
     return Planner::distanceCost(toState2D(v1, env_width_), toState2D(v2, env_width_));
   }
@@ -109,7 +123,7 @@ class AStar : public Planner {
    */
   bool getValidNeighbor(const unsigned int index, astar::VertexPtr &neighbor);
 
- protected:
+  protected:
   using PQueueT =
       std::priority_queue<astar::VertexPtr, std::vector<astar::VertexPtr>, astar::VertexComparator>;
 

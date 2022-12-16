@@ -41,8 +41,7 @@ int main(int argc, char const* argv[]) {
 
       moving_ai_lab::Scenario scenario;
       loader->loadScenario(
-          "/home/pk/Desktop/anyangle_ws/src/anyangle_planners/maps/street-scen/1024/"
-          "NewYork_0_1024.map.scen",
+          "/home/phone/personal/anyangle_planners/maps/street-scen/512/Berlin_0_512.map.scen",
           scenario);
 
       // create environment from scenario
@@ -118,12 +117,16 @@ int main(int argc, char const* argv[]) {
 
             anyangle::State2DList closelist;
             planners[planner_id]->getNodeExpansions(closelist);
-            std::cout << "Number of node expansions: " << closelist.size() << std::endl;
+            // std::cout << "Number of node expansions: " << closelist.size() << std::endl;
 
-            // std::shared_ptr<ThetaStar> theta_star =
-            //     std::dynamic_pointer_cast<ThetaStar>(planners[planner_id]);
+            // std::shared_ptr<WeightedLazyThetaStar> w_lazy_theta_star =
+            //     std::dynamic_pointer_cast<WeightedLazyThetaStar>(planners[planner_id]);
             // std::cout << "Number of line of sight checks: "
             //           << theta_star->getLineOfSightCheckCount() << std::endl;
+
+            // anyangle::State2DList start_closelist, goal_closelist;
+            // w_lazy_theta_star->getStartNodeExpansions(start_closelist);
+            // w_lazy_theta_star->getGoalNodeExpansions(goal_closelist);
 
             // {
             //   out << std::to_string(i) << " " << std::to_string(bucket) << " "
@@ -132,12 +135,14 @@ int main(int argc, char const* argv[]) {
             // }
 
             // get the solution path
-            // anyangle::State2DList path;
-            // planners[planner_id]->getSolutionPath(path);
+            anyangle::State2DList path;
+            planners[planner_id]->getSolutionPath(path);
 
             // std::cout << "Path size: " << path.size() << std::endl;
 
             // auto img = env->toImage(path, closelist);
+            // auto img = env->toImage(start_closelist);
+
             auto img = env->toImage(closelist);
 
             // auto img = env->toImage();

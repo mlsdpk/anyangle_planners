@@ -13,27 +13,47 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(OpenCV REQUIRED)
 find_package(grid_map_core REQUIRED)
 
-add_executable(benchmark
-    src/benchmark.cpp
-    src/algorithm/a_star.cpp
-    src/algorithm/planner.cpp
-    src/algorithm/theta_star.cpp
-    src/algorithm/lazy_theta_star.cpp
-    src/algorithm/weighted_lazy_theta_star.cpp
-    src/map/environment.cpp
-    src/map/scenario_loader.cpp)
+list(APPEND PROJ_SOURCE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/algorithm/planner.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/map/environment.cpp")
 
-target_include_directories(benchmark 
+## Build the library as shared
+add_library(${PROJECT_NAME} SHARED
+    ${PROJ_SOURCE_FILES})
+
+target_include_directories(${PROJECT_NAME} 
     PUBLIC
         ${grid_map_core_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(benchmark 
+target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
         ${grid_map_core_LIBRARIES}
         ${OpenCV_LIBRARIES})
+
+# add_executable(benchmark
+#     src/benchmark.cpp
+#     src/algorithm/a_star.cpp
+#     src/algorithm/planner.cpp
+#     src/algorithm/theta_star.cpp
+#     src/algorithm/lazy_theta_star.cpp
+#     src/algorithm/weighted_lazy_theta_star.cpp
+#     src/map/environment.cpp
+#     src/map/scenario_loader.cpp)
+
+# target_include_directories(benchmark 
+#     PUBLIC
+#         ${grid_map_core_INCLUDE_DIRS}
+#         ${OpenCV_INCLUDE_DIRS}
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
+
+# target_link_libraries(benchmark 
+#     PRIVATE 
+#         ${grid_map_core_LIBRARIES}
+#         ${OpenCV_LIBRARIES})
 
 # include(CMakePackageConfigHelpers)
 
