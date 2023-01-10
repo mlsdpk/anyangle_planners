@@ -105,8 +105,9 @@ bool AStar::solve(const State2D &start, const State2D &goal) {
         // update this neighbor g-value, h-value and parent
         neighbor->parent_vertex = v_min;
         neighbor->g_cost = neighbor_g_value;
-        neighbor->h_cost = costToGoHeuristics(toState2D(*neighbor, env_width_),
-                                              toState2D(*goal_vertex_, env_width_));
+        // neighbor->h_cost = costToGoHeuristics(toState2D(*neighbor, env_width_),
+        //                                       toState2D(*goal_vertex_, env_width_));
+        neighbor->h_cost = 0.0;
 
         // add neighbor to priority queue
         neighbor->updateKey();
