@@ -1,1 +1,12 @@
-{}
+{
+    "experimsent": {
+        "planners": [
+            "Dijkstra",
+            "AStar",
+            "ThetaStar"
+        ],
+        "environment": [
+            "MovingAILabScenario"
+        ]        
+    }
+}
