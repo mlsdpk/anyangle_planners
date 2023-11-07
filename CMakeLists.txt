@@ -10,28 +10,40 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(OpenCV REQUIRED)
-find_package(grid_map_core REQUIRED)
+# Build thirdpart libraries
+add_subdirectory(thirdparty)
 
-list(APPEND PROJ_SOURCE_FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/algorithm/planner.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/map/environment.cpp")
+# Build the main planning libraries
+add_subdirectory(src)
+
+option(BUILD_APPS "Build example applications." OFF)
+if(BUILD_APPS)
+    message(STATUS "Building example applications.")
+    add_subdirectory(apps)
+endif()
+
+# find_package(OpenCV REQUIRED)
+# find_package(grid_map_core REQUIRED)
+
+# list(APPEND PROJ_SOURCE_FILES
+#     "${CMAKE_CURRENT_SOURCE_DIR}/src/algorithm/planner.cpp"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/src/map/environment.cpp")
 
 ## Build the library as shared
-add_library(${PROJECT_NAME} SHARED
-    ${PROJ_SOURCE_FILES})
+# add_library(${PROJECT_NAME} SHARED
+#     ${PROJ_SOURCE_FILES})
 
-target_include_directories(${PROJECT_NAME} 
-    PUBLIC
-        ${grid_map_core_INCLUDE_DIRS}
-        ${OpenCV_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+# target_include_directories(${PROJECT_NAME} 
+#     PUBLIC
+#         ${grid_map_core_INCLUDE_DIRS}
+#         ${OpenCV_INCLUDE_DIRS}
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(${PROJECT_NAME} 
-    PRIVATE 
-        ${grid_map_core_LIBRARIES}
-        ${OpenCV_LIBRARIES})
+# target_link_libraries(${PROJECT_NAME} 
+#     PRIVATE 
+#         ${grid_map_core_LIBRARIES}
+#         ${OpenCV_LIBRARIES})
 
 # add_executable(benchmark
 #     src/benchmark.cpp
