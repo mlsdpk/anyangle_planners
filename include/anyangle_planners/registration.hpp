@@ -41,9 +41,23 @@ enum class PlannerID
   THETASTAR
 };
 
+/**
+ * @brief All the registered environment types
+ *
+ */
+enum class EnvironmentID
+{
+  INVALID = 0,
+  MovingAILabScenario
+};
+
 NLOHMANN_JSON_SERIALIZE_ENUM(PlannerID, {{PlannerID::INVALID, "invalid"},
                                          {PlannerID::DIJKSTRA, "Dijkstra"},
                                          {PlannerID::ASTAR, "AStar"},
                                          {PlannerID::THETASTAR, "ThetaStar"}})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(EnvironmentID,
+                             {{EnvironmentID::INVALID, "invalid"},
+                              {EnvironmentID::MovingAILabScenario, "MovingAILabScenario"}})
 
 }  // namespace anyangle

@@ -38,6 +38,7 @@ namespace anyangle {
 struct BenchmarkConfig
 {
   std::vector<PlannerID> planners;
+  EnvironmentID environment_id;
 };
 
 void from_json(const json& j, BenchmarkConfig& config)
@@ -50,6 +51,12 @@ void from_json(const json& j, BenchmarkConfig& config)
     {
       config.planners.push_back(j_id.template get<anyangle::PlannerID>());
     }
+  }
+
+  // update environment type
+  if (j.contains("environment"))
+  {
+    config.environment_id = j["environment"].template get<anyangle::EnvironmentID>();
   }
 }
 

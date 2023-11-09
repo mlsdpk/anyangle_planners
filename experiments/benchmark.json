@@ -1,12 +1,13 @@
 {
-    "experimsent": {
+    "experiment": {
         "planners": [
             "Dijkstra",
             "AStar",
             "ThetaStar"
         ],
-        "environment": [
-            "MovingAILabScenario"
-        ]        
+        "environment": "MovingAILabScenario"
+    },
+    "MovingAILabScenario": {
+        "scenario": "Berlin_0_256"
     }
 }
