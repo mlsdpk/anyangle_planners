@@ -1,3 +1,7 @@
 [submodule "thirdparty/json"]
 	path = thirdparty/json
 	url = git@github.com:nlohmann/json.git
+
+[submodule "thirdparty/tabulate"]
+	path = thirdparty/tabulate
+	url = git@github.com:p-ranav/tabulate.git
