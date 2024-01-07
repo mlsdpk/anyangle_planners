@@ -5,7 +5,15 @@
             "AStar",
             "ThetaStar"
         ],
-        "environment": "MovingAILabScenario"
+        "environment": {
+            "type": "GridMap",
+            "id": "MovingAILabScenario"
+        },
+        "num_of_runs": 100
+    },
+    "GridMap": {
+        "connectivity": "four",
+        "distance_metric": "Euclidean"
     },
     "MovingAILabScenario": {
         "scenario": "Berlin_0_256"

@@ -11,4 +11,5 @@ target_include_directories(benchmark
 target_link_libraries(benchmark
   PRIVATE
   PUBLIC
+    anyangle_planners_benchmark
     nlohmann_json::nlohmann_json)

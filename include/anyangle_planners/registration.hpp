@@ -51,6 +51,36 @@ enum class EnvironmentID
   MovingAILabScenario
 };
 
+/**
+ * @brief Internal environment type representation
+ *
+ */
+enum class EnvironmentType
+{
+  INVALID = 0,
+  GRIDMAP = 1
+};
+
+namespace grid_map {
+enum class Connectivity
+{
+  FOUR,  // four-connected grid
+  EIGHT  // eight-connected grid
+};
+}
+
+/**
+ * @brief Distance metric to use during planning
+ *
+ */
+enum class DistanceMetric
+{
+  INVALID = 0,
+  EUCLIDEAN = 1,
+  MANHATTAN = 2,
+  OCTILE = 3
+};
+
 NLOHMANN_JSON_SERIALIZE_ENUM(PlannerID, {{PlannerID::INVALID, "invalid"},
                                          {PlannerID::DIJKSTRA, "Dijkstra"},
                                          {PlannerID::ASTAR, "AStar"},
@@ -59,5 +89,62 @@ NLOHMANN_JSON_SERIALIZE_ENUM(PlannerID, {{PlannerID::INVALID, "invalid"},
 NLOHMANN_JSON_SERIALIZE_ENUM(EnvironmentID,
                              {{EnvironmentID::INVALID, "invalid"},
                               {EnvironmentID::MovingAILabScenario, "MovingAILabScenario"}})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(EnvironmentType, {{EnvironmentType::INVALID, "invalid"},
+                                               {EnvironmentType::GRIDMAP, "GridMap"}})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(grid_map::Connectivity, {{grid_map::Connectivity::FOUR, "Four"},
+                                                      {grid_map::Connectivity::EIGHT, "Eight"}})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(DistanceMetric, {{DistanceMetric::INVALID, "invalid"},
+                                              {DistanceMetric::EUCLIDEAN, "Euclidean"},
+                                              {DistanceMetric::MANHATTAN, "Manhattan"},
+                                              {DistanceMetric::OCTILE, "Octile"}})
+
+inline const std::string toString(PlannerID planner_id)
+{
+  switch (planner_id)
+  {
+    case PlannerID::DIJKSTRA:
+      return "Dijkstra";
+    case PlannerID::ASTAR:
+      return "AStar";
+    case PlannerID::THETASTAR:
+      return "ThetaStar";
+
+    default:
+      break;
+  }
+
+  return "invalid";
+}
+
+inline const std::string toString(EnvironmentType env_type)
+{
+  switch (env_type)
+  {
+    case EnvironmentType::GRIDMAP:
+      return "GridMap";
+
+    default:
+      break;
+  }
+
+  return "invalid";
+}
+
+inline const std::string toString(EnvironmentID env_id)
+{
+  switch (env_id)
+  {
+    case EnvironmentID::MovingAILabScenario:
+      return "MovingAILabScenario";
+
+    default:
+      break;
+  }
+
+  return "invalid";
+}
 
 }  // namespace anyangle
