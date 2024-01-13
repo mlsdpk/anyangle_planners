@@ -11,12 +11,6 @@
 namespace anyangle {
 namespace map {
 
-enum class EnvironmentType
-{
-  IMAGE = 0,
-  MovingAILabScenario = 1
-};
-
 class Environment
 {
 public:

@@ -8,7 +8,7 @@ GridMapEnvironment::GridMapEnvironment(Connectivity connectivity, const std::str
 {
 }
 
-void GridMapEnvironment::updateMap(const grid_map::GridMap& grid_map)
+void GridMapEnvironment::create(const grid_map::GridMap& grid_map)
 {
   map_ = grid_map;
 

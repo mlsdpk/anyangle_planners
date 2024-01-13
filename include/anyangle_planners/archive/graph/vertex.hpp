@@ -9,10 +9,6 @@ namespace graph {
 class Vertex
 {
 public:
-  using VertexPtr = std::shared_ptr<Vertex>;
-  using VertexConstPtr = std::shared_ptr<const Vertex>;
-  using VertexList = std::vector<VertexPtr>;
-
   /**
    * @brief Deleted default constructor
    *
@@ -68,16 +64,16 @@ public:
   [[nodiscard]] unsigned int& y() noexcept { return y_idx; }
 
   /**
-   * @brief Getter for the y-index of the vertex
+   * @brief Getter for the parent of the vertex
    *
-   * @return y-index
+   * @return parent vertex
    */
   [[nodiscard]] const VertexConstPtr parent() const noexcept { return parent_vertex; }
 
   /**
-   * @brief Getter for the y-index of the vertex
+   * @brief Getter for the parent of the vertex
    *
-   * @return y-index
+   * @return parent vertex
    */
   [[nodiscard]] VertexPtr parent() noexcept { return parent_vertex; }
 
@@ -89,8 +85,12 @@ protected:
   unsigned int y_idx;
 
   /// @brief pointer to parent vertex of this vertex
-  VertexPtr parent_vertex;
+  std::shared_ptr<Vertex> parent_vertex;
 };
+
+typedef std::shared_ptr<Vertex> VertexPtr;
+typedef std::vector<VertexPtr> VertexList;
+typedef std::shared_ptr<const Vertex> VertexConstPtr;
 
 }  // namespace graph
 }  // namespace anyangle
