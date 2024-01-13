@@ -22,39 +22,32 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
+#include "anyangle_planners/graph/state_space.hpp"
 
 namespace anyangle {
-namespace algorithm {
+namespace graph {
 
 /**
- * @brief Base class to represent a generic any-angle planning algorithm.
- * Note that this class is based on the CRTP design pattern.
+ * @brief State space to represent a point in 2D.
  *
- * @tparam Derived Type of the planning algorithm (Dijkstra, A* etc)
- * @tparam StateSpaceType Type of the statespace
+ * @tparam T datatype
  */
-template <typename Derived, typename StateSpaceType>
-class PlannerBase
+template <typename T>
+class Point2D : public StateSpaceBase<Point2D<T>, T, 2u>
 {
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
-
 public:
-  PlannerBase(const std::string& name) : name_{name} {}
-
-  void reset() { derived().reset(); }
-
-  bool solve(const StateSpaceType& start, const StateSpaceType& goal)
+  /**
+   * @brief Constructor
+   *
+   * @param x x-coordinate of a point
+   * @param y y-coordinate of a point
+   */
+  inline Point2D(const T x, const T y)
   {
-    return derived().solve(start, goal);
+    this->state_variables_[0] = x;
+    this->state_variables_[1] = y;
   }
-
-protected:
-  /// @brief The name of the planner
-  std::string name_;
 };
 
-}  // namespace algorithm
+}  // namespace graph
 }  // namespace anyangle

@@ -22,39 +22,24 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
+#include "anyangle_planners/algorithm/dijkstra/dijkstra.hpp"
 
-namespace anyangle {
-namespace algorithm {
+namespace anyangle::algorithm {
 
-/**
- * @brief Base class to represent a generic any-angle planning algorithm.
- * Note that this class is based on the CRTP design pattern.
- *
- * @tparam Derived Type of the planning algorithm (Dijkstra, A* etc)
- * @tparam StateSpaceType Type of the statespace
- */
-template <typename Derived, typename StateSpaceType>
-class PlannerBase
+template <typename StateSpaceType>
+void Dijkstra<StateSpaceType>::reset()
 {
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  std::cout << "Dijkstra reset has been called\n";
+}
 
-public:
-  PlannerBase(const std::string& name) : name_{name} {}
+template <typename StateSpaceType>
+bool Dijkstra<StateSpaceType>::solve(const StateSpaceType& start, const StateSpaceType& goal)
+{
+  std::cout << "Solving using Dijkstra algorithm\n";
+  std::cout << "Start state: " << start << "\n";
+  std::cout << "Goal state: " << goal << "\n";
 
-  void reset() { derived().reset(); }
+  return true;  // Replace with your actual result
+}
 
-  bool solve(const StateSpaceType& start, const StateSpaceType& goal)
-  {
-    return derived().solve(start, goal);
-  }
-
-protected:
-  /// @brief The name of the planner
-  std::string name_;
-};
-
-}  // namespace algorithm
-}  // namespace anyangle
+}  // namespace anyangle::algorithm
