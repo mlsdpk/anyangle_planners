@@ -22,40 +22,52 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
+#include "anyangle_planners/graph/point2d.hpp"
 
 namespace anyangle {
-namespace algorithm {
+namespace algorithm::dijkstra {
 
-/**
- * @brief Base class to represent a generic any-angle planning algorithm.
- * Note that this class is based on the CRTP design pattern.
- *
- * @tparam Derived Type of the planning algorithm (Dijkstra, A* etc)
- * @tparam StateSpaceType Type of the statespace
- * @tparam EnvironmentType Type of the planning problem 
- */
-template <typename Derived, typename StateSpaceType, typename EnvironmentType>
-class PlannerBase
+template <typename T>
+inline unsigned int toIndex(const T x, const T y, const T width)
 {
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+  return (x * width) + y;
+}
 
+class Vertex : public graph::Point2D<unsigned int>
+{
 public:
-  PlannerBase(const std::string& name) : name_{name} {}
-
-  void reset() { derived().reset(); }
-
-  bool solve(const StateSpaceType& start, const StateSpaceType& goal, const EnvironmentType& planning_problem)
+  inline Vertex(const unsigned int _x, const unsigned int _y, const unsigned int _index)
+    : graph::Point2D<unsigned int>(_x, _y), index{_index}
   {
-    return derived().solve(start, goal, planning_problem);
   }
 
-protected:
-  /// @brief The name of the planner
-  std::string name_;
+  unsigned int index;
+
+  double f_cost{std::numeric_limits<double>::infinity()};
+  double g_cost{std::numeric_limits<double>::infinity()};
+  double h_cost{std::numeric_limits<double>::infinity()};
+
+  bool visited{false};
+
+  // - key to store in the priority queue
+  //   <f-value, g-value>
+  // - uses lexicographical ordering for minimum vertex selection
+  std::pair<double, double> key;
+
+  void updateKey()
+  {
+    f_cost = g_cost + h_cost;
+    key = std::make_pair(f_cost, g_cost);
+  }
+
+  bool operator>(const Vertex& other) const
+  {
+    // std::pair support lexicographical comparison
+    // which is convenient for us to implement the comparison
+    // without writing additional code
+    return key > other.key;
+  }
 };
 
-}  // namespace algorithm
+}  // namespace algorithm::dijkstra
 }  // namespace anyangle

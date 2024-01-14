@@ -24,22 +24,45 @@
 
 #include "anyangle_planners/algorithm/dijkstra/dijkstra.hpp"
 
-namespace anyangle::algorithm {
+namespace anyangle {
+namespace algorithm::dijkstra {
 
-template <typename StateSpaceType>
-void Dijkstra<StateSpaceType>::reset()
+template <typename StateSpaceType, typename EnvironmentType>
+void Dijkstra<StateSpaceType, EnvironmentType>::reset()
 {
   std::cout << "Dijkstra reset has been called\n";
 }
 
-template <typename StateSpaceType>
-bool Dijkstra<StateSpaceType>::solve(const StateSpaceType& start, const StateSpaceType& goal)
+template <typename StateSpaceType, typename EnvironmentType>
+Vertex* Dijkstra<StateSpaceType, EnvironmentType>::addToGraph(const StateSpaceType& state,
+                                                              const EnvironmentType& problem)
+{
+  // compute graph index from the state input and planning problem
+  auto index = toIndex(state[0], state[1], problem.getWidth());
+  return graph_.emplace(index, std::make_unique<Vertex>(state[0], state[1], index))
+      .first->second.get();
+}
+
+template <typename StateSpaceType, typename EnvironmentType>
+bool Dijkstra<StateSpaceType, EnvironmentType>::solve(const StateSpaceType& start,
+                                                      const StateSpaceType& goal,
+                                                      const EnvironmentType& planning_problem)
 {
   std::cout << "Solving using Dijkstra algorithm\n";
   std::cout << "Start state: " << start << "\n";
   std::cout << "Goal state: " << goal << "\n";
 
-  return true;  // Replace with your actual result
+  // reset intenal stuffs
+  reset();
+
+  // add start and goal vertices into graph
+  start_vertex_ = addToGraph(start, planning_problem);
+  goal_vertex_ = addToGraph(goal, planning_problem);
+
+  bool solved = false;
+
+  return solved;
 }
 
-}  // namespace anyangle::algorithm
+}  // namespace algorithm::dijkstra
+}  // namespace anyangle

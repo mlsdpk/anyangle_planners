@@ -31,6 +31,7 @@
 #include "anyangle_planners/algorithm/dijkstra/dijkstra.hpp"
 #include "anyangle_planners/benchmark/config.hpp"
 #include "anyangle_planners/benchmark/experiment.hpp"
+#include "anyangle_planners/environment/grid2d.hpp"
 #include "anyangle_planners/graph/point2d.hpp"
 #include "anyangle_planners/registration.hpp"
 #include "nlohmann/json.hpp"
@@ -106,14 +107,18 @@ int main(int argc, char const* argv[])
   // testing
   {
     using state_space_t = anyangle::graph::Point2D<double>;
+    using env_t = anyangle::environment::Grid2D<state_space_t>;
+    using dijkstra_algo_t = anyangle::algorithm::dijkstra::Dijkstra<state_space_t, env_t>;
 
-    anyangle::algorithm::Dijkstra<state_space_t> dijkstra_algorithm{"dijkstra"};
-    dijkstra_algorithm.reset();
+    // create a planning problem
+    auto env = env_t{10.0, 10.0, 0.05};
 
-    auto start_state = anyangle::graph::Point2D(0.0, 0.0);
-    auto goal_state = anyangle::graph::Point2D(1.0, 1.0);
+    // start and goal states
+    auto start_state = state_space_t(0.0, 0.0);
+    auto goal_state = state_space_t(1.0, 1.0);
 
-    dijkstra_algorithm.solve(start_state, goal_state);
+    dijkstra_algo_t dijkstra_algorithm{"dijkstra"};
+    dijkstra_algorithm.solve(start_state, goal_state, env);
   }
 
   return 0;
