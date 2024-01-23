@@ -1,0 +1,25 @@
+name: build
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+on:
+  # Trigger the workflow on push or pull request,
+  push:
+  pull_request:
+  # allow manually starting this workflow
+  workflow_dispatch:
+
+jobs:
+  Linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Compile
+        shell: bash
+        run: |
+          VERBOSE=1 cmake --build build --config $BUILD_TYPE
