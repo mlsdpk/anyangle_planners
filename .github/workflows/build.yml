@@ -22,4 +22,5 @@ jobs:
       - name: Compile
         shell: bash
         run: |
+          cmake -B build
           VERBOSE=1 cmake --build build --config $BUILD_TYPE
