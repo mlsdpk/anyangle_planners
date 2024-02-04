@@ -44,6 +44,7 @@ class StateSpaceBase
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 public:
+  using value_t = T;
   static constexpr size_t DIMENSION = Dimension;
 
   T& operator[](std::size_t index) { return state_variables_[index]; }

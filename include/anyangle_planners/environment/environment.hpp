@@ -32,6 +32,8 @@ class EnvironmentBase
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 public:
+  using state_space_t = StateSpaceType;
+
   bool inCollision(const StateSpaceType& state) { return derived().isInCollision(state); }
 };
 

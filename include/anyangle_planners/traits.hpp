@@ -22,45 +22,21 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
+#include <type_traits>
 
-#include "anyangle_planners/traits.hpp"
+#include "anyangle_planners/environment/environment.hpp"
+#include "anyangle_planners/graph/state_space.hpp"
 
 namespace anyangle {
-namespace algorithm {
+namespace traits {
 
-/**
- * @brief Base class to represent a generic any-angle planning algorithm.
- * Note that this class is based on the CRTP design pattern.
- *
- * @tparam Derived Type of the planning algorithm (Dijkstra, A* etc)
- * @tparam StateSpaceType Type of the statespace
- * @tparam EnvironmentType Type of the planning problem
- */
-template <typename Derived, typename StateSpaceType, typename EnvironmentType,
-          typename = traits::IsStateSpace<StateSpaceType>,
-          typename = traits::IsEnvironment<EnvironmentType>>
-class PlannerBase
-{
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+template <typename T>
+using IsStateSpace = std::enable_if_t<
+    std::is_base_of_v<graph::StateSpaceBase<T, typename T::value_t, T::DIMENSION>, T>>;
 
-public:
-  PlannerBase(const std::string& name) : name_{name} {}
+template <typename T>
+using IsEnvironment = std::enable_if_t<
+    std::is_base_of_v<environment::EnvironmentBase<T, typename T::state_space_t>, T>>;
 
-  void reset() { derived().reset(); }
-
-  bool solve(const StateSpaceType& start, const StateSpaceType& goal,
-             const EnvironmentType& planning_problem)
-  {
-    return derived().solve(start, goal, planning_problem);
-  }
-
-protected:
-  /// @brief The name of the planner
-  std::string name_;
-};
-
-}  // namespace algorithm
+}  // namespace traits
 }  // namespace anyangle
