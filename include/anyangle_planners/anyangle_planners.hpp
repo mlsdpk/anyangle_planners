@@ -22,21 +22,7 @@
 
 #pragma once
 
-#include <type_traits>
-
-#include "anyangle_planners/environment/environment.hpp"
-#include "anyangle_planners/graph/state_space.hpp"
-
-namespace anyangle {
-namespace traits {
-
-template <typename T>
-using IsStateSpace = std::enable_if_t<
-    std::is_base_of_v<graph::StateSpaceBase<T, typename T::value_t, T::DIMENSION>, T>>;
-
-template <typename T>
-using IsEnvironment = std::enable_if_t<
-    std::is_base_of_v<environment::EnvironmentBase<T, typename T::state_space_t>, T>>;
-
-}  // namespace traits
-}  // namespace anyangle
+#include "anyangle_planners/algorithm.hpp"
+#include "anyangle_planners/environment.hpp"
+#include "anyangle_planners/registration.hpp"
+#include "anyangle_planners/state_space.hpp"

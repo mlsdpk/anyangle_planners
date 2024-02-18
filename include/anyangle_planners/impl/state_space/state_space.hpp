@@ -26,13 +26,13 @@
 #include <cstddef>
 
 namespace anyangle {
-namespace graph {
+namespace state_space {
 
 /**
  * @brief Generic interface class to represent a state space in N-dimensions.
- * 
+ *
  * Note that this class is based on the CRTP design pattern.
- * 
+ *
  * @tparam Derived derived class
  * @tparam T datatype of state variables
  * @tparam Dimension dimension of state space
@@ -70,5 +70,5 @@ protected:
   std::array<T, Dimension> state_variables_;
 };
 
-}  // namespace graph
+}  // namespace state_space
 }  // namespace anyangle

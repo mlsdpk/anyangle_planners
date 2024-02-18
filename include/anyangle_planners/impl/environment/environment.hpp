@@ -22,32 +22,34 @@
 
 #pragma once
 
-#include "anyangle_planners/graph/state_space.hpp"
+#include "anyangle_planners/impl/traits.hpp"
 
 namespace anyangle {
-namespace graph {
+namespace environment {
 
-/**
- * @brief State space to represent a point in 2D.
- *
- * @tparam T datatype
- */
-template <typename T>
-class Point2D : public StateSpaceBase<Point2D<T>, T, 2u>
+template <typename Derived, typename StateSpaceType,
+          typename = anyangle::internal::traits::IsStateSpace<StateSpaceType>>
+class EnvironmentBase
 {
+  Derived& derived() { return *static_cast<Derived*>(this); }
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+
 public:
-  /**
-   * @brief Constructor
-   *
-   * @param x x-coordinate of a point
-   * @param y y-coordinate of a point
-   */
-  inline Point2D(const T x, const T y)
+  using state_space_t = StateSpaceType;
+
+  bool inCollision(internal::traits::pass_type<StateSpaceType> state) const
   {
-    this->state_variables_[0] = x;
-    this->state_variables_[1] = y;
+    return derived().isInCollision(state);
+  }
+
+  decltype(auto) getStartAndGoalState() const { return derived().getStartAndGoalState(); }
+
+  decltype(auto) cost(internal::traits::pass_type<StateSpaceType> from,
+                      internal::traits::pass_type<StateSpaceType> to) const
+  {
+    return derived().cost(from, to);
   }
 };
 
-}  // namespace graph
+}  // namespace environment
 }  // namespace anyangle

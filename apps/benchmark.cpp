@@ -29,6 +29,8 @@
 #include <string>
 
 #include "anyangle_planners/anyangle_planners.hpp"
+#include "anyangle_planners/benchmark/config.hpp"
+#include "anyangle_planners/benchmark/experiment.hpp"
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;

@@ -22,20 +22,4 @@
 
 #pragma once
 
-namespace anyangle {
-namespace environment {
-
-template <typename Derived, typename StateSpaceType>
-class EnvironmentBase
-{
-  Derived& derived() { return *static_cast<Derived*>(this); }
-  const Derived& derived() const { return *static_cast<const Derived*>(this); }
-
-public:
-  using state_space_t = StateSpaceType;
-
-  bool inCollision(const StateSpaceType& state) { return derived().isInCollision(state); }
-};
-
-}  // namespace environment
-}  // namespace anyangle
+#include "anyangle_planners/impl/data_structures/data_structures.hpp"

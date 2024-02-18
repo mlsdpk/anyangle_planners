@@ -22,52 +22,32 @@
 
 #pragma once
 
-#include "anyangle_planners/graph/point2d.hpp"
+#include "anyangle_planners/impl/state_space/state_space.hpp"
 
 namespace anyangle {
-namespace algorithm::dijkstra {
+namespace state_space {
 
+/**
+ * @brief State space to represent a point in 2D.
+ *
+ * @tparam T datatype
+ */
 template <typename T>
-inline unsigned int toIndex(const T x, const T y, const T width)
-{
-  return (x * width) + y;
-}
-
-class Vertex : public graph::Point2D<unsigned int>
+class Point2D : public StateSpaceBase<Point2D<T>, T, 2u>
 {
 public:
-  inline Vertex(const unsigned int _x, const unsigned int _y, const unsigned int _index)
-    : graph::Point2D<unsigned int>(_x, _y), index{_index}
+  /**
+   * @brief Constructor
+   *
+   * @param x x-coordinate of a point
+   * @param y y-coordinate of a point
+   */
+  inline Point2D(const T x, const T y)
   {
-  }
-
-  unsigned int index;
-
-  double f_cost{std::numeric_limits<double>::infinity()};
-  double g_cost{std::numeric_limits<double>::infinity()};
-  double h_cost{std::numeric_limits<double>::infinity()};
-
-  bool visited{false};
-
-  // - key to store in the priority queue
-  //   <f-value, g-value>
-  // - uses lexicographical ordering for minimum vertex selection
-  std::pair<double, double> key;
-
-  void updateKey()
-  {
-    f_cost = g_cost + h_cost;
-    key = std::make_pair(f_cost, g_cost);
-  }
-
-  bool operator>(const Vertex& other) const
-  {
-    // std::pair support lexicographical comparison
-    // which is convenient for us to implement the comparison
-    // without writing additional code
-    return key > other.key;
+    this->state_variables_[0] = x;
+    this->state_variables_[1] = y;
   }
 };
 
-}  // namespace algorithm::dijkstra
+}  // namespace state_space
 }  // namespace anyangle

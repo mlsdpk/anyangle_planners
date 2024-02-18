@@ -25,7 +25,9 @@
 #include <iostream>
 #include <string>
 
-#include "anyangle_planners/traits.hpp"
+#include "anyangle_planners/impl/environment/environment.hpp"
+#include "anyangle_planners/impl/state_space/state_space.hpp"
+#include "anyangle_planners/impl/traits.hpp"
 
 namespace anyangle {
 namespace algorithm {
@@ -38,21 +40,22 @@ namespace algorithm {
  * @tparam StateSpaceType Type of the statespace
  * @tparam EnvironmentType Type of the planning problem
  */
-template <typename Derived, typename StateSpaceType, typename EnvironmentType,
-          typename = traits::IsStateSpace<StateSpaceType>,
-          typename = traits::IsEnvironment<EnvironmentType>>
+template <typename Derived, typename EnvironmentType,
+          typename = internal::traits::IsEnvironment<EnvironmentType>>
 class PlannerBase
 {
   Derived& derived() { return *static_cast<Derived*>(this); }
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 public:
+  using state_space_t = typename EnvironmentType::state_space_t;
+
   PlannerBase(const std::string& name) : name_{name} {}
 
-  void reset() { derived().reset(); }
+  void reset(EnvironmentType& planning_problem) { derived().reset(); }
 
-  bool solve(const StateSpaceType& start, const StateSpaceType& goal,
-             const EnvironmentType& planning_problem)
+  bool solve(const state_space_t& start, const state_space_t& goal,
+             EnvironmentType& planning_problem)
   {
     return derived().solve(start, goal, planning_problem);
   }
