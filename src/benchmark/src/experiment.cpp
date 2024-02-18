@@ -22,10 +22,12 @@
 
 #include "anyangle_planners/benchmark/experiment.hpp"
 
+#include <chrono>
+
 namespace anyangle {
 namespace benchmark {
 
-Experiment::Experiment(const config::Config& config)
+Experiment::Experiment(const config::Config& config) : config_{config}
 {
   using namespace tabulate;
 
@@ -57,20 +59,21 @@ Experiment::Experiment(const config::Config& config)
   std::cout << header_table << "\n";
 
   Table configs_table;
-  configs_table.add_row(Table::Row_t{"Type", toString(config.env_params.env_type_params->env_type)});
+  configs_table.add_row(
+      Table::Row_t{"Type", toString(config.env_params.env_type_params->env_type)});
   configs_table.add_row(Table::Row_t{"ID", toString(config.env_params.env_id_params->env_id)});
   configs_table.add_row(Table::Row_t{"No: of runs", std::to_string(config.num_of_runs)});
 
   configs_table.add_row(Table::Row_t{"Planners", [&]() {
-                                std::string planner_list_str;
-                                for (const auto id : config.planners)
-                                {
-                                  planner_list_str += toString(id);
-                                  planner_list_str += std::string("\n");
-                                }
+                                       std::string planner_list_str;
+                                       for (const auto id : config.planners)
+                                       {
+                                         planner_list_str += toString(id);
+                                         planner_list_str += std::string("\n");
+                                       }
 
-                                return planner_list_str;
-                              }()});
+                                       return planner_list_str;
+                                     }()});
 
   configs_table[0].format().font_align(FontAlign::center);
   configs_table[1].format().font_align(FontAlign::center);
@@ -86,6 +89,62 @@ Experiment::Experiment(const config::Config& config)
   configs_table.column(1).format().font_align(FontAlign::left);
 
   std::cout << configs_table << "\n\n";
+}
+
+void Experiment::setup()
+{
+  auto env_id = config_.env_params.env_id_params->env_id;
+
+  if (env_id == anyangle::EnvironmentID::MovingAILabScenario)
+  {
+    auto env_id_params = std::dynamic_pointer_cast<config::env_id::MovingAILabScenario>(
+        config_.env_params.env_id_params);
+
+    // create moving AI Lab scenario loader
+    auto scenario_loader = std::make_unique<moving_ai_lab::ScenarioLoader>();
+
+    if (!scenario_loader->loadScenario(env_id_params->scenario_file_name, moving_ai_lab_scenario_))
+    {
+      exit(0);
+    }
+
+    // create graph environment from AI Lab scenario
+    // TODO: handle environment based on configs
+    graph_env_ = create<anyangle::algorithm::dijkstra::env_t>(moving_ai_lab_scenario_);
+  }
+}
+
+void Experiment::run(bool verbose)
+{
+  // TODO: run for all experiments
+  // TODO: handle based on configs
+
+  if (moving_ai_lab_scenario_.experiments.empty()) return;
+
+  const auto width = moving_ai_lab_scenario_.experiments[1].map_width;
+
+  const auto start_id = (moving_ai_lab_scenario_.experiments[1].start_x * width) +
+                        moving_ai_lab_scenario_.experiments[1].start_y;
+  const auto goal_id = (moving_ai_lab_scenario_.experiments[1].goal_x * width) +
+                       moving_ai_lab_scenario_.experiments[1].goal_y;
+
+  using state_space_t = typename anyangle::algorithm::dijkstra::env_t::Graph::state_space_t;
+  graph_env_.setStartAndGoalState(state_space_t(start_id), state_space_t(goal_id));
+
+  using namespace anyangle::algorithm::dijkstra;
+  Dijkstra dijkstra_algorithm{"dijkstra"};
+  dijkstra_algorithm.reset(graph_env_);
+
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+  bool solved =
+      dijkstra_algorithm.solve(state_space_t(start_id), state_space_t(goal_id), graph_env_);
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+  std::cout << "solved: " << solved << std::endl;
+
+  std::cout << "Time difference = "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]"
+            << std::endl;
 }
 
 }  // namespace benchmark

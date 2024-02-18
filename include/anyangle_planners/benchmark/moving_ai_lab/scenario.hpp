@@ -22,31 +22,32 @@
 
 #pragma once
 
-#include "anyangle_planners/anyangle_planners.hpp"
-#include "anyangle_planners/benchmark/config.hpp"
-#include "anyangle_planners/benchmark/environment_loader.hpp"
-#include "anyangle_planners/benchmark/moving_ai_lab/scenario_loader.hpp"
-#include "tabulate/table.hpp"
+#include <string>
+#include <vector>
 
-namespace anyangle {
-namespace benchmark {
+namespace anyangle::benchmark {
+namespace moving_ai_lab {
 
-class Experiment
+struct Scenario
 {
-public:
-  explicit Experiment(const config::Config& config);
+  struct Experiment
+  {
+    std::string map_name{""};
+    unsigned int map_width{0};
+    unsigned int map_height{0};
+    unsigned int bucket{0};
+    unsigned int start_x{0};
+    unsigned int start_y{0};
+    unsigned int goal_x{0};
+    unsigned int goal_y{0};
+    double optimal_length{0.0};
+  };
 
-  void setup();
+  std::string name{""};
+  std::string version{""};
 
-  void run(bool verbose = true);
-
-private:
-  config::Config config_;
-
-  moving_ai_lab::Scenario moving_ai_lab_scenario_;
-
-  anyangle::algorithm::dijkstra::env_t graph_env_;
+  std::vector<Experiment> experiments;
 };
 
-}  // namespace benchmark
+}  // namespace moving_ai_lab
 }  // namespace anyangle

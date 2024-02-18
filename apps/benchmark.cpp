@@ -28,44 +28,10 @@
 #include <numeric>
 #include <string>
 
-#include "anyangle_planners/algorithm/dijkstra/dijkstra.hpp"
-#include "anyangle_planners/benchmark/config.hpp"
-#include "anyangle_planners/benchmark/experiment.hpp"
-#include "anyangle_planners/environment/grid2d.hpp"
-#include "anyangle_planners/graph/point2d.hpp"
-#include "anyangle_planners/registration.hpp"
+#include "anyangle_planners/anyangle_planners.hpp"
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
-
-// namespace anyangle {
-
-// struct BenchmarkConfig
-// {
-//   std::vector<PlannerID> planners;
-//   EnvironmentID environment_id;
-// };
-
-// void from_json(const json& j, BenchmarkConfig& config)
-// {
-//   // update planners
-//   if (j.contains("planners"))
-//   {
-//     auto j_planners = j["planners"];
-//     for (const auto& j_id : j_planners)
-//     {
-//       config.planners.push_back(j_id.template get<anyangle::PlannerID>());
-//     }
-//   }
-
-//   // update environment type
-//   if (j.contains("environment"))
-//   {
-//     config.environment_id = j["environment"].template get<anyangle::EnvironmentID>();
-//   }
-// }
-
-// }  // namespace anyangle
 
 int main(int argc, char const* argv[])
 {
@@ -100,26 +66,10 @@ int main(int argc, char const* argv[])
 
   // create experiment
   auto exp = anyangle::benchmark::Experiment(config);
+  exp.setup();
 
   // run experiment
-  // exp->run(/* verbose = */ true);
-
-  // testing
-  {
-    using state_space_t = anyangle::graph::Point2D<double>;
-    using env_t = anyangle::environment::Grid2D<state_space_t>;
-    using dijkstra_algo_t = anyangle::algorithm::dijkstra::Dijkstra<state_space_t, env_t>;
-
-    // create a planning problem
-    auto env = env_t{10.0, 10.0, 0.05};
-
-    // start and goal states
-    auto start_state = state_space_t(0.0, 0.0);
-    auto goal_state = state_space_t(1.0, 1.0);
-
-    dijkstra_algo_t dijkstra_algorithm{"dijkstra"};
-    dijkstra_algorithm.solve(start_state, goal_state, env);
-  }
+  exp.run(/* verbose = */ true);
 
   return 0;
 }

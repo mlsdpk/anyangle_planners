@@ -22,31 +22,29 @@
 
 #pragma once
 
-#include "anyangle_planners/anyangle_planners.hpp"
-#include "anyangle_planners/benchmark/config.hpp"
-#include "anyangle_planners/benchmark/environment_loader.hpp"
-#include "anyangle_planners/benchmark/moving_ai_lab/scenario_loader.hpp"
-#include "tabulate/table.hpp"
+#include <memory>
+#include <string>
+#include <unordered_map>
 
-namespace anyangle {
-namespace benchmark {
+#include "anyangle_planners/benchmark/moving_ai_lab/scenario.hpp"
 
-class Experiment
+namespace anyangle::benchmark {
+namespace moving_ai_lab {
+
+class ScenarioLoader
 {
 public:
-  explicit Experiment(const config::Config& config);
+  using ScenarioList = std::unordered_map<std::string, Scenario>;
 
-  void setup();
+  ScenarioLoader() = default;
 
-  void run(bool verbose = true);
+  bool loadScenario(const std::string& path_to_scenario_file, Scenario& scenario);
 
 private:
-  config::Config config_;
-
-  moving_ai_lab::Scenario moving_ai_lab_scenario_;
-
-  anyangle::algorithm::dijkstra::env_t graph_env_;
+  ScenarioList scenarios_;
 };
 
-}  // namespace benchmark
-}  // namespace anyangle
+typedef std::shared_ptr<ScenarioLoader> ScenarioLoaderPtr;
+
+}  // namespace moving_ai_lab
+}  // namespace anyangle::benchmark

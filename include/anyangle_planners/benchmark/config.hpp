@@ -53,11 +53,13 @@ struct GridMap : Base
 namespace env_id {
 struct Base
 {
+  virtual ~Base() = default;
+
   /// @brief registered environment IDs (INVALID = 0, MovingAILabScenario = 1)
   EnvironmentID env_id;
 };
 
-struct MovingAILabScenario : Base
+struct MovingAILabScenario : public Base
 {
   /// @brief Name of the moving AI Lab scenario file
   std::string scenario_file_name;
