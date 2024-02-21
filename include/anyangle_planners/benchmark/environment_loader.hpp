@@ -32,11 +32,62 @@
 
 namespace anyangle::benchmark {
 
+/// @brief Temporarily put here for now
 enum class Connectivity
 {
   FOUR,  // four-connected grid
   EIGHT  // eight-connected grid
 };
+
+template <typename StateSpaceType,
+          anyangle::utils::DistanceType DistanceMetric = anyangle::utils::DistanceType::EUCLIDEAN>
+class DistanceCost
+  : public anyangle::environment::CostBase<DistanceCost<StateSpaceType, DistanceMetric>,
+                                           StateSpaceType>
+{
+public:
+  using state_space_t = StateSpaceType;
+
+  static decltype(auto) cost(const state_space_t& from, const state_space_t& to)
+  {
+    auto indexTo2D = [&](int i) {
+      const auto ix = i / width;
+      const auto iy = i % width;
+      return std::make_pair(ix, iy);
+    };
+
+    if constexpr (DistanceMetric == anyangle::utils::DistanceType::MANHATTAN)
+    {
+      auto [from_x, from_y] = indexTo2D(from[0]);
+      auto [to_x, to_y] = indexTo2D(to[0]);
+      return anyangle::utils::manhattanDistance(from_x, from_y, to_x, to_y);
+    }
+    else if constexpr (DistanceMetric == anyangle::utils::DistanceType::EUCLIDEAN)
+    {
+      auto [from_x, from_y] = indexTo2D(from[0]);
+      auto [to_x, to_y] = indexTo2D(to[0]);
+      return anyangle::utils::euclideanDistance(from_x, from_y, to_x, to_y);
+    }
+    else if constexpr (DistanceMetric == anyangle::utils::DistanceType::OCTILE)
+    {
+      auto [from_x, from_y] = indexTo2D(from[0]);
+      auto [to_x, to_y] = indexTo2D(to[0]);
+      return anyangle::utils::octileDistance(from_x, from_y, to_x, to_y);
+    }
+  }
+
+  static int width;
+};
+
+template <typename StateSpaceType, anyangle::utils::DistanceType DistanceMetric>
+int DistanceCost<StateSpaceType, DistanceMetric>::width;
+
+using state_space_t = anyangle::environment::graph::VertexStateSpace;
+using vertex_t = anyangle::algorithm::dijkstra::vertex_t;
+using vertex_id_t = anyangle::environment::graph::vertex_id_t;
+using edge_t = anyangle::environment::graph::EdgePropertiesBase<void>;
+using cost_t = DistanceCost<state_space_t, anyangle::utils::DistanceType::OCTILE>;
+using graph_t = anyangle::environment::graph::Graph<cost_t, state_space_t, vertex_t, edge_t>;
 
 /**
  * @brief Convenient method to create environment::graph::Graph environment
@@ -47,9 +98,8 @@ enum class Connectivity
  * @param scenario
  * @return environment::graph::Graph
  */
-template <typename GraphT>
-inline auto create(const moving_ai_lab::Scenario& scenario,
-                   Connectivity connectivity = Connectivity::FOUR)
+inline decltype(auto) create(const moving_ai_lab::Scenario& scenario,
+                             Connectivity connectivity = Connectivity::EIGHT)
 {
   // check the scenario version is supported or not
   if (scenario.version != "1")
@@ -137,7 +187,15 @@ inline auto create(const moving_ai_lab::Scenario& scenario,
                               -width - 1, -width + 1, +width - 1, +width + 1};
   }
 
-  GraphT graph{static_cast<size_t>(vertex_count)};
+  // 1D index to 2D position
+  auto indexTo2D = [](int i, int width) {
+    const auto ix = i / width;
+    const auto iy = i % width;
+    return std::make_pair(ix, iy);
+  };
+
+  graph_t graph{static_cast<size_t>(vertex_count)};
+  graph_t::cost_t::width = width;
 
   for (size_t i = 0; i < temp_map.size(); ++i)
   {
@@ -167,7 +225,10 @@ inline auto create(const moving_ai_lab::Scenario& scenario,
       if (neighbor_index < 0 || neighbor_index >= (width * height)) continue;
 
       // TODO(Phone): compute edge weight based on distance metric
-      graph.addEdge(i, neighbor_index, {1.0});
+      graph.addEdge(
+          i, neighbor_index,
+          {graph.cost(typename graph_t::state_space_t{static_cast<vertex_id_t>(i)},
+                      typename graph_t::state_space_t{static_cast<vertex_id_t>(neighbor_index)})});
     }
   }
 

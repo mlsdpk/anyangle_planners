@@ -32,6 +32,9 @@
 namespace anyangle {
 namespace algorithm {
 
+template <typename StateSpaceType>
+using solution_t = std::pair<std::vector<StateSpaceType>, double>;
+
 /**
  * @brief Base class to represent a generic any-angle planning algorithm.
  * Note that this class is based on the CRTP design pattern.
@@ -54,8 +57,9 @@ public:
 
   void reset(EnvironmentType& planning_problem) { derived().reset(); }
 
-  bool solve(const state_space_t& start, const state_space_t& goal,
-             EnvironmentType& planning_problem)
+  std::optional<solution_t<state_space_t>> solve(const state_space_t& start,
+                                                 const state_space_t& goal,
+                                                 EnvironmentType& planning_problem)
   {
     return derived().solve(start, goal, planning_problem);
   }

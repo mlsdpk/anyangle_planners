@@ -23,11 +23,25 @@
 #pragma once
 
 #include "anyangle_planners/impl/traits.hpp"
+#include "anyangle_planners/impl/utils/distance.hpp"
 
 namespace anyangle {
 namespace environment {
 
-template <typename Derived, typename StateSpaceType,
+template <typename Derived, typename StateSpaceType>
+class CostBase
+{
+  Derived& derived() { return *static_cast<Derived*>(this); }
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+
+public:
+  static decltype(auto) cost(const StateSpaceType& from, const StateSpaceType& to)
+  {
+    return Derived::cost(from, to);
+  }
+};
+
+template <typename Derived, typename StateSpaceType, typename CostType,
           typename = anyangle::internal::traits::IsStateSpace<StateSpaceType>>
 class EnvironmentBase
 {
@@ -36,6 +50,7 @@ class EnvironmentBase
 
 public:
   using state_space_t = StateSpaceType;
+  using cost_t = CostType;
 
   bool inCollision(internal::traits::pass_type<StateSpaceType> state) const
   {
@@ -47,7 +62,7 @@ public:
   decltype(auto) cost(internal::traits::pass_type<StateSpaceType> from,
                       internal::traits::pass_type<StateSpaceType> to) const
   {
-    return derived().cost(from, to);
+    return CostType::cost(from, to);
   }
 };
 

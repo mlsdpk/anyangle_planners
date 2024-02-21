@@ -36,7 +36,7 @@ class StateSpaceBase;
 }  // namespace graph
 
 namespace environment {
-template <typename Derived, typename StateSpaceType, typename>
+template <typename Derived, typename StateSpaceType, typename CostType, typename>
 class EnvironmentBase;
 }  // namespace environment
 
@@ -53,8 +53,8 @@ using IsStateSpace = std::enable_if_t<
 /// @brief Trait to check whether the class template is a derived class of
 /// environment::EnvironmentBase
 template <typename T>
-using IsEnvironment = std::enable_if_t<
-    std::is_base_of_v<environment::EnvironmentBase<T, typename T::state_space_t, void>, T>>;
+using IsEnvironment = std::enable_if_t<std::is_base_of_v<
+    environment::EnvironmentBase<T, typename T::state_space_t, typename T::cost_t, void>, T>>;
 
 template <typename T>
 using pass_type = std::conditional_t<std::is_fundamental_v<T>, T, const T&>;

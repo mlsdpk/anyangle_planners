@@ -34,13 +34,21 @@ namespace algorithm::dijkstra {
 struct Vertex : environment::graph::VertexPropertiesBase<Vertex>
 {
   double g_value{std::numeric_limits<double>::infinity()};
-  double h_value{std::numeric_limits<double>::infinity()};
+  double h_value{};
 };
 
-using vertex_t = environment::graph::vertex_id_t;
+using vertex_id_t = environment::graph::vertex_id_t;
+using vertex_t = Vertex;
 using edge_t = environment::graph::EdgePropertiesBase<void>;
 using state_space_t = environment::graph::VertexStateSpace;
-using env_t = environment::graph::Graph<state_space_t, Vertex, edge_t>;
+
+class NullCost : public anyangle::environment::CostBase<NullCost, state_space_t>
+{
+public:
+  static decltype(auto) cost(const state_space_t& from, const state_space_t& to) { return 0.0; }
+};
+
+using env_t = environment::graph::Graph<NullCost, state_space_t, vertex_t, edge_t>;
 
 namespace internal {
 template <typename T>
@@ -70,7 +78,9 @@ public:
 
   void reset(env_t& planning_problem);
 
-  bool solve(const state_space_t& start, const state_space_t& goal, env_t& planning_problem);
+  std::optional<solution_t<state_space_t>> solve(const state_space_t& start,
+                                                 const state_space_t& goal,
+                                                 env_t& planning_problem);
 
 protected:
   /////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +89,7 @@ protected:
   using open_list_key_t = std::pair<double, double>;
 
   /// @brief Index to the container storing vertices (value)
-  using open_list_value_t = vertex_t;
+  using open_list_value_t = vertex_id_t;
 
   using open_list_t =
       anyangle::data_structures::priority_queue<8, open_list_key_t, open_list_value_t>;
@@ -87,14 +97,14 @@ protected:
   /////////////////////////////////////////////////////////////////////////////////////////
 
   /// @brief IDs to start and goal vertices
-  vertex_t start_vertex_id_;
-  vertex_t goal_vertex_id_;
+  vertex_id_t start_vertex_id_;
+  vertex_id_t goal_vertex_id_;
 
   /// @brief openlist (frontier) for dijkstra algorithm
   open_list_t open_list_;
 
   /// @brief closelist (expanded vertices)
-  std::vector<vertex_t> close_list_;
+  std::vector<vertex_id_t> close_list_;
 
   /// @brief
   std::vector<bool> visited_list_;
@@ -106,8 +116,6 @@ protected:
 template <typename EnvironmentType>
 void Dijkstra<EnvironmentType>::reset(env_t& planning_problem)
 {
-  std::cout << "Dijkstra reset has been called\n";
-
   // we will be allocating enough memory for all our variables
   // this is necessary to save expensive memory allocation time
   // during runtime i.e., call to solve().
@@ -117,14 +125,24 @@ void Dijkstra<EnvironmentType>::reset(env_t& planning_problem)
   const auto n = planning_problem.graphOrder();
 
   visited_list_.assign(n, false);
+  close_list_.reserve(n);
 
   // get start and goal vertex IDs
-  auto [start_vertex_id_, goal_vertex_id_] = planning_problem.getStartAndGoalState();
+  auto [start_vertex_id, goal_vertex_id] = planning_problem.getStartAndGoalState();
 
-  printf("Number of vertices: %ld\n", n);
+  start_vertex_id_ = start_vertex_id;
+  goal_vertex_id_ = goal_vertex_id;
 
-  std::cout << "start_vertex_id_: " << start_vertex_id_ << std::endl;
-  std::cout << "goal_vertex_id_: " << goal_vertex_id_ << std::endl;
+  // if astar heuristics is used, we precompute h-values (cost-to-go heuristic)
+  if (use_astar_heuristics_)
+  {
+    for (size_t i = 0; i < n; ++i)
+    {
+      auto& q = planning_problem.vertex(i);
+      q.h_value = planning_problem.cost(state_space_t{static_cast<vertex_id_t>(i)},
+                                        state_space_t{static_cast<vertex_id_t>(goal_vertex_id_)});
+    }
+  }
 
   // get start vertex
   auto& start_vertex = planning_problem.vertex(start_vertex_id_);
@@ -132,7 +150,10 @@ void Dijkstra<EnvironmentType>::reset(env_t& planning_problem)
   // update start vertex properties
   start_vertex.g_value = 0.0;
   start_vertex.h_value =
-      use_astar_heuristics_ ? planning_problem.cost(start_vertex_id_, goal_vertex_id_) : 0.0;
+      use_astar_heuristics_
+          ? planning_problem.cost(state_space_t{static_cast<vertex_id_t>(start_vertex_id_)},
+                                  state_space_t{static_cast<vertex_id_t>(goal_vertex_id_)})
+          : 0.0;
 
   // add this start vertex to frontier
   open_list_.push(std::make_pair(start_vertex.g_value + start_vertex.h_value, start_vertex.g_value),
@@ -140,16 +161,20 @@ void Dijkstra<EnvironmentType>::reset(env_t& planning_problem)
 }
 
 template <typename EnvironmentType>
-bool Dijkstra<EnvironmentType>::solve(const state_space_t& start, const state_space_t& goal,
-                                      env_t& planning_problem)
+std::optional<solution_t<state_space_t>> Dijkstra<EnvironmentType>::solve(
+    const state_space_t& start, const state_space_t& goal, env_t& planning_problem)
 {
   bool solved = false;
+
+  // some optimizations for cache
+  bool use_astar_heuristics = use_astar_heuristics_;
+  auto start_vertex_id = start_vertex_id_;
+  auto goal_vertex_id = goal_vertex_id_;
 
   while (!open_list_.empty())
   {
     // get the index to the minimum vertex for expansion
     const auto [_key, _v_min_id] = open_list_.top();
-
     const auto v_min_id = _v_min_id;
 
     // mark this minimum vertex as visited
@@ -162,7 +187,7 @@ bool Dijkstra<EnvironmentType>::solve(const state_space_t& start, const state_sp
     close_list_.push_back(v_min_id);
 
     // if this expanded vertex is goal, solved
-    if (v_min_id == goal_vertex_id_)
+    if (v_min_id == goal_vertex_id)
     {
       solved = true;
       break;
@@ -173,7 +198,7 @@ bool Dijkstra<EnvironmentType>::solve(const state_space_t& start, const state_sp
     const auto v_min_g_value = planning_problem.vertex(v_min_id).g_value;
 
     planning_problem.forEachNeighbors(
-        v_min_id, [&](const vertex_t neighbor, const edge_t& edge) mutable {
+        v_min_id, [&](const vertex_id_t neighbor, const edge_t& edge) mutable {
           // if this neighbor is already visted, do nothing
           if (visited_list_[neighbor]) return;
 
@@ -193,19 +218,10 @@ bool Dijkstra<EnvironmentType>::solve(const state_space_t& start, const state_sp
             neighbor_v.g_value = neighbor_g_value;
 
             double neighbor_h_value = 0.0;
-            if (/*use_astar_heuristics_*/ true)
+            if (use_astar_heuristics)
             {
               // compute cost-to-go heuristics
-              // neighbor_h_value =   neighbor_v.h_value;
-
-              const auto x1 = neighbor / 1024;
-              const auto y1 = neighbor % 1024;
-
-              const auto x2 = goal_vertex_id_ / 1024;
-              const auto y2 = goal_vertex_id_ % 1024;
-
-              neighbor_h_value =
-                  static_cast<double>(std::sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
+              neighbor_h_value = neighbor_v.h_value;
             }
 
             // add this neighbor to open list for expansion
@@ -215,7 +231,30 @@ bool Dijkstra<EnvironmentType>::solve(const state_space_t& start, const state_sp
         });
   }
 
-  return solved;
+  solution_t<state_space_t> solution;
+  if (solved)
+  {
+    // if solution found, backtrace to generate a path and compute cost
+
+    auto& path = solution.first;
+    auto& cost = solution.second;
+
+    auto current_id = goal_vertex_id;
+    while (current_id != start_vertex_id)
+    {
+      path.emplace_back(state_space_t{static_cast<vertex_id_t>(current_id)});
+      auto parent_id = planning_problem.vertex(current_id).parent;
+      cost += planning_problem.cost(state_space_t{static_cast<vertex_id_t>(current_id)},
+                                    state_space_t{static_cast<vertex_id_t>(parent_id)});
+      current_id = parent_id;
+    }
+
+    path.emplace_back(state_space_t{static_cast<vertex_id_t>(start_vertex_id)});
+    cost += planning_problem.cost(state_space_t{static_cast<vertex_id_t>(current_id)},
+                                  state_space_t{static_cast<vertex_id_t>(start_vertex_id)});
+  }
+
+  return solved ? std::make_optional(std::move(solution)) : std::nullopt;
 }
 
 }  // namespace algorithm::dijkstra

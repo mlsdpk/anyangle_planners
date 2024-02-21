@@ -30,6 +30,8 @@
 namespace anyangle {
 namespace environment::graph {
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 using vertex_id_t = std::uint32_t;
 
 template <typename Derived = void>
@@ -53,9 +55,12 @@ public:
 
 using state_space_t = VertexStateSpace;
 
-template <typename StateSpaceType = state_space_t, typename VertexT = VertexPropertiesBase<void>,
-          typename EdgeT = EdgePropertiesBase<void>>
-class Graph : public EnvironmentBase<Graph<StateSpaceType, VertexT, EdgeT>, state_space_t, void>
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename CostFunctionType, typename StateSpaceType = state_space_t,
+          typename VertexT = VertexPropertiesBase<void>, typename EdgeT = EdgePropertiesBase<void>>
+class Graph : public EnvironmentBase<Graph<CostFunctionType, StateSpaceType, VertexT, EdgeT>,
+                                     state_space_t, CostFunctionType, void>
 {
 public:
   using state_space_t = StateSpaceType;
@@ -119,15 +124,6 @@ public:
   {
     return std::make_pair(start_vertex_id_, goal_vertex_id_);
   }
-
-  /**
-   * @brief TODO: update cost function with distance metric
-   *
-   * @param from
-   * @param to
-   * @return decltype(auto)
-   */
-  decltype(auto) cost(vertex_id_t from, vertex_id_t to) const { return 1.0; }
 
 protected:
   std::vector<VertexT> vertices_{};

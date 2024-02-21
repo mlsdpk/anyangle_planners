@@ -3,7 +3,7 @@
 #include <cmath>
 #include <type_traits>
 
-#include "anyangle_planners/impl/graph/state_space.hpp"
+#include "anyangle_planners/impl/state_space/state_space.hpp"
 #include "anyangle_planners/impl/traits.hpp"
 
 namespace anyangle {

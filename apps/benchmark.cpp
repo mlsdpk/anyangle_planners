@@ -68,7 +68,6 @@ int main(int argc, char const* argv[])
 
   // create experiment
   auto exp = anyangle::benchmark::Experiment(config);
-  exp.setup();
 
   // run experiment
   exp.run(/* verbose = */ true);
