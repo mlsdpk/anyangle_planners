@@ -23,7 +23,7 @@ make
 if you want to build example applications (i.e., benchmarking and visualization), you must add `-DBUILD_APPS=ON` to the `cmake` call above:
 
 ```bash
-cmake  -DBUILD_APPS=ON ..
+cmake  -DBUILD_APPS=ON -DCMAKE_BUILD_TYPE=Release ..
 ```
 
 # Example Applications
@@ -40,16 +40,16 @@ cmake  -DBUILD_APPS=ON ..
         ],
         "environment": {
             "type": "GridMap",
-            "id": "MovingAILabScenario"
+            "id": "MovingAILabScenario",
+            "MovingAILabScenario": {
+                "scenario_file_name": "../maps/street-scen/1024/Boston_0_1024.map.scen"
+            }
         },
         "num_of_runs": 100
     },
     "GridMap": {
         "connectivity": "four",
         "distance_metric": "Euclidean"
-    },
-    "MovingAILabScenario": {
-        "scenario": "Berlin_0_256"
     }
 }
 ```
