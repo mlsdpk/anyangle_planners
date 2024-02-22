@@ -24,19 +24,40 @@
 
 #include <type_traits>
 
-#include "anyangle_planners/environment/environment.hpp"
-#include "anyangle_planners/graph/state_space.hpp"
-
 namespace anyangle {
-namespace traits {
 
+//////////////////////////////////////////////////////////////////////////////////////
+// FORWARD DECLARATIONS
+//////////////////////////////////////////////////////////////////////////////////////
+
+namespace graph {
+template <typename Derived, typename T, std::size_t Dimension>
+class StateSpaceBase;
+}  // namespace graph
+
+namespace environment {
+template <typename Derived, typename StateSpaceType, typename CostType, typename>
+class EnvironmentBase;
+}  // namespace environment
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+namespace internal::traits {
+
+/// @brief Trait to check whether the class template is a derived class of
+/// graph::StateSpaceBase
 template <typename T>
 using IsStateSpace = std::enable_if_t<
     std::is_base_of_v<graph::StateSpaceBase<T, typename T::value_t, T::DIMENSION>, T>>;
 
+/// @brief Trait to check whether the class template is a derived class of
+/// environment::EnvironmentBase
 template <typename T>
-using IsEnvironment = std::enable_if_t<
-    std::is_base_of_v<environment::EnvironmentBase<T, typename T::state_space_t>, T>>;
+using IsEnvironment = std::enable_if_t<std::is_base_of_v<
+    environment::EnvironmentBase<T, typename T::state_space_t, typename T::cost_t, void>, T>>;
 
-}  // namespace traits
+template <typename T>
+using pass_type = std::conditional_t<std::is_fundamental_v<T>, T, const T&>;
+
+}  // namespace internal::traits
 }  // namespace anyangle

@@ -60,7 +60,14 @@ void from_json(const json& j, Config& config)
     if (env_id == anyangle::EnvironmentID::MovingAILabScenario)
     {
       config.env_params.env_id_params = std::make_shared<env_id::MovingAILabScenario>();
-      config.env_params.env_id_params->env_id = env_id;
+
+      auto derived =
+          std::dynamic_pointer_cast<env_id::MovingAILabScenario>(config.env_params.env_id_params);
+
+      derived->env_id = env_id;
+
+      auto scenario_file_name = j["environment"]["MovingAILabScenario"];
+      derived->scenario_file_name = scenario_file_name.value("scenario_file_name", "");
     }
   }
 

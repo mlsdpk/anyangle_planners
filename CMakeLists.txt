@@ -13,12 +13,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Build thirdpart libraries
 add_subdirectory(thirdparty)
 
-# Build the main planning libraries
-add_subdirectory(src)
-
 option(BUILD_APPS "Build example applications." OFF)
 if(BUILD_APPS)
     message(STATUS "Building example applications.")
+    add_subdirectory(src/benchmark)
     add_subdirectory(apps)
 endif()
 

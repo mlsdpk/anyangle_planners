@@ -22,20 +22,53 @@
 
 #pragma once
 
-namespace anyangle {
-namespace environment {
+#include <array>
+#include <cstddef>
 
-template <typename Derived, typename StateSpaceType>
-class EnvironmentBase
+namespace anyangle {
+namespace state_space {
+
+/**
+ * @brief Generic interface class to represent a state space in N-dimensions.
+ *
+ * Note that this class is based on the CRTP design pattern.
+ *
+ * @tparam Derived derived class
+ * @tparam T datatype of state variables
+ * @tparam Dimension dimension of state space
+ */
+template <typename Derived, typename T, std::size_t Dimension>
+class StateSpaceBase
 {
   Derived& derived() { return *static_cast<Derived*>(this); }
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 public:
-  using state_space_t = StateSpaceType;
+  using value_t = T;
+  static constexpr size_t DIMENSION = Dimension;
 
-  bool inCollision(const StateSpaceType& state) { return derived().isInCollision(state); }
+  T& operator[](std::size_t index) { return state_variables_[index]; }
+
+  const T& operator[](std::size_t index) const { return state_variables_[index]; }
+
+  friend std::ostream& operator<<(std::ostream& os, const StateSpaceBase& state)
+  {
+    os << "State variables: ";
+    for (std::size_t i = 0; i < Dimension; ++i)
+    {
+      os << state[i];
+      if (i < Dimension - 1)
+      {
+        os << ", ";
+      }
+    }
+    return os;
+  }
+
+protected:
+  /// @brief Container to store all state variables
+  std::array<T, Dimension> state_variables_;
 };
 
-}  // namespace environment
+}  // namespace state_space
 }  // namespace anyangle

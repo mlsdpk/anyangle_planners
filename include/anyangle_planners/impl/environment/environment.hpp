@@ -22,53 +22,49 @@
 
 #pragma once
 
-#include <array>
-#include <cstddef>
+#include "anyangle_planners/impl/traits.hpp"
+#include "anyangle_planners/impl/utils/distance.hpp"
 
 namespace anyangle {
-namespace graph {
+namespace environment {
 
-/**
- * @brief Generic interface class to represent a state space in N-dimensions.
- * 
- * Note that this class is based on the CRTP design pattern.
- * 
- * @tparam Derived derived class
- * @tparam T datatype of state variables
- * @tparam Dimension dimension of state space
- */
-template <typename Derived, typename T, std::size_t Dimension>
-class StateSpaceBase
+template <typename Derived, typename StateSpaceType>
+class CostBase
 {
   Derived& derived() { return *static_cast<Derived*>(this); }
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
 public:
-  using value_t = T;
-  static constexpr size_t DIMENSION = Dimension;
-
-  T& operator[](std::size_t index) { return state_variables_[index]; }
-
-  const T& operator[](std::size_t index) const { return state_variables_[index]; }
-
-  friend std::ostream& operator<<(std::ostream& os, const StateSpaceBase& state)
+  static decltype(auto) cost(const StateSpaceType& from, const StateSpaceType& to)
   {
-    os << "State variables: ";
-    for (std::size_t i = 0; i < Dimension; ++i)
-    {
-      os << state[i];
-      if (i < Dimension - 1)
-      {
-        os << ", ";
-      }
-    }
-    return os;
+    return Derived::cost(from, to);
   }
-
-protected:
-  /// @brief Container to store all state variables
-  std::array<T, Dimension> state_variables_;
 };
 
-}  // namespace graph
+template <typename Derived, typename StateSpaceType, typename CostType,
+          typename = anyangle::internal::traits::IsStateSpace<StateSpaceType>>
+class EnvironmentBase
+{
+  Derived& derived() { return *static_cast<Derived*>(this); }
+  const Derived& derived() const { return *static_cast<const Derived*>(this); }
+
+public:
+  using state_space_t = StateSpaceType;
+  using cost_t = CostType;
+
+  bool inCollision(internal::traits::pass_type<StateSpaceType> state) const
+  {
+    return derived().isInCollision(state);
+  }
+
+  decltype(auto) getStartAndGoalState() const { return derived().getStartAndGoalState(); }
+
+  decltype(auto) cost(internal::traits::pass_type<StateSpaceType> from,
+                      internal::traits::pass_type<StateSpaceType> to) const
+  {
+    return CostType::cost(from, to);
+  }
+};
+
+}  // namespace environment
 }  // namespace anyangle

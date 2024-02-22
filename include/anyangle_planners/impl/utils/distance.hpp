@@ -3,7 +3,8 @@
 #include <cmath>
 #include <type_traits>
 
-#include "anyangle_planners/graph/state_space.hpp"
+#include "anyangle_planners/impl/state_space/state_space.hpp"
+#include "anyangle_planners/impl/traits.hpp"
 
 namespace anyangle {
 namespace utils {
@@ -47,10 +48,13 @@ template <typename T>
  * @param s2 to state
  * @return distance cost
  */
-[[nodiscard]] inline double manhattanDistance(const graph::State2D &s1,
-                                              const graph::State2D &s2) noexcept
+template <typename StateSpaceType, typename = internal::traits::IsStateSpace<StateSpaceType>>
+[[nodiscard]] inline double manhattanDistance(const StateSpaceType &s1,
+                                              const StateSpaceType &s2) noexcept
 {
-  return manhattanDistance(s1.x, s1.y, s2.x, s2.y);
+  static_assert((StateSpaceType::DIMENSION == 2u), "Distance function only supports 2D.");
+
+  return manhattanDistance(s1[0], s1[1], s2[0], s2[1]);
 }
 
 /**
@@ -80,10 +84,13 @@ template <typename T>
  * @param s2 to state
  * @return distance cost
  */
-[[nodiscard]] inline double euclideanDistance(const graph::State2D &s1,
-                                              const graph::State2D &s2) noexcept
+template <typename StateSpaceType, typename = internal::traits::IsStateSpace<StateSpaceType>>
+[[nodiscard]] inline double euclideanDistance(const StateSpaceType &s1,
+                                              const StateSpaceType &s2) noexcept
 {
-  return euclideanDistance(s1.x, s1.y, s2.x, s2.y);
+  static_assert((StateSpaceType::DIMENSION == 2u), "Distance function only supports 2D.");
+
+  return euclideanDistance(s1[0], s1[1], s2[0], s2[1]);
 }
 
 /**
@@ -116,9 +123,12 @@ template <typename T>
  * @param s2 to state
  * @return distance cost
  */
-[[nodiscard]] inline double octileDistance(const graph::State2D &s1,
-                                           const graph::State2D &s2) noexcept
+template <typename StateSpaceType, typename = internal::traits::IsStateSpace<StateSpaceType>>
+[[nodiscard]] inline double octileDistance(const StateSpaceType &s1,
+                                           const StateSpaceType &s2) noexcept
 {
+  static_assert((StateSpaceType::DIMENSION == 2u), "Distance function only supports 2D.");
+
   return octileDistance(s1.x, s1.y, s2.x, s2.y);
 }
 

@@ -7,15 +7,15 @@
         ],
         "environment": {
             "type": "GridMap",
-            "id": "MovingAILabScenario"
+            "id": "MovingAILabScenario",
+            "MovingAILabScenario": {
+                "scenario_file_name": "../maps/street-scen/1024/Boston_0_1024.map.scen"
+            }
         },
         "num_of_runs": 100
     },
     "GridMap": {
         "connectivity": "four",
         "distance_metric": "Euclidean"
-    },
-    "MovingAILabScenario": {
-        "scenario": "Berlin_0_256"
     }
 }

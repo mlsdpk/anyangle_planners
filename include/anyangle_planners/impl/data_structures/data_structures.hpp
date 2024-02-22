@@ -22,32 +22,12 @@
 
 #pragma once
 
-#include "anyangle_planners/graph/state_space.hpp"
+#include "anyangle_planners/impl/data_structures/priority_queue.hpp"
 
-namespace anyangle {
-namespace graph {
+namespace anyangle::data_structures {
 
-/**
- * @brief State space to represent a point in 2D.
- *
- * @tparam T datatype
- */
-template <typename T>
-class Point2D : public StateSpaceBase<Point2D<T>, T, 2u>
-{
-public:
-  /**
-   * @brief Constructor
-   *
-   * @param x x-coordinate of a point
-   * @param y y-coordinate of a point
-   */
-  inline Point2D(const T x, const T y)
-  {
-    this->state_variables_[0] = x;
-    this->state_variables_[1] = y;
-  }
-};
+template <std::size_t block_size, typename T, typename V, typename Compare = std::less<T>,
+          typename Allocator = std::allocator<T>>
+using priority_queue = rollbear::prio_queue<block_size, T, V, Compare, Allocator>;
 
-}  // namespace graph
-}  // namespace anyangle
+}

@@ -1,6 +1,6 @@
 add_library(anyangle_planners_benchmark
     src/config.cpp
-    src/experiment.cpp)
+    src/moving_ai_lab/scenario_loader.cpp)
 
 target_include_directories(anyangle_planners_benchmark
     PUBLIC

@@ -22,31 +22,4 @@
 
 #pragma once
 
-#include "anyangle_planners/environment/environment.hpp"
-
-namespace anyangle {
-namespace environment {
-
-template <typename StateSpaceType>
-class Grid2D : public EnvironmentBase<Grid2D<StateSpaceType>, StateSpaceType>
-{
-public:
-  inline Grid2D(const double width, const double height, const double resolution)
-    : width_{width}, height_{height}, resolution_{resolution}
-  {
-    // TODO: create 2D grid cells
-  }
-
-  double getWidth() const { return width_; }
-  double getHeight() const { return height_; }
-
-  bool inCollision(const StateSpaceType& state) { return false; }
-
-protected:
-  double width_;
-  double height_;
-  double resolution_;
-};
-
-}  // namespace environment
-}  // namespace anyangle
+#include "anyangle_planners/impl/data_structures/data_structures.hpp"
