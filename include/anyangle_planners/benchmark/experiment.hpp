@@ -88,11 +88,7 @@ public:
     configs_table[2].format().font_align(FontAlign::center);
     configs_table[3].format().font_align(FontAlign::center);
 
-    configs_table.column(0)
-        .format()
-        .font_align(FontAlign::right)
-        .font_color(Color::green)
-        .font_background_color(Color::grey);
+    configs_table.column(0).format().font_color(Color::yellow).font_style({FontStyle::bold});
 
     configs_table.column(1).format().font_align(FontAlign::left);
 
@@ -126,42 +122,140 @@ public:
 
       if (moving_ai_lab_scenario_.experiments.empty()) return;
 
-      const auto width = moving_ai_lab_scenario_.experiments[1].map_width;
+      std::cout << "Running experiments from Moving AI Lab scenario file...\n";
 
-      // width - x, height - y, top-left - (0, 0)
-      const auto start_x = moving_ai_lab_scenario_.experiments[0].start_y;
-      const auto start_y = moving_ai_lab_scenario_.experiments[0].start_x;
-      const auto goal_x = moving_ai_lab_scenario_.experiments[0].goal_y;
-      const auto goal_y = moving_ai_lab_scenario_.experiments[0].goal_x;
+      std::vector<double> optimal_lengths;
+      std::vector<size_t> node_expansions;
+      std::vector<size_t> running_times;
 
-      const auto start_id = (start_x * width) + start_y;
-      const auto goal_id = (goal_x * width) + goal_y;
+      optimal_lengths.reserve(moving_ai_lab_scenario_.experiments.size());
+      node_expansions.reserve(moving_ai_lab_scenario_.experiments.size());
+      running_times.reserve(moving_ai_lab_scenario_.experiments.size());
+
+      const auto width = moving_ai_lab_scenario_.experiments[0].map_width;
 
       using graph_env_t = anyangle::benchmark::graph_t;
       using state_space_t = typename graph_env_t::state_space_t;
-      graph_env.setStartAndGoalState(state_space_t(start_id), state_space_t(goal_id));
 
       using namespace anyangle::algorithm::dijkstra;
       Dijkstra<graph_env_t> dijkstra_algorithm{"dijkstra"};
-      dijkstra_algorithm.reset(graph_env);
 
-      std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-      auto solution =
-          dijkstra_algorithm.solve(state_space_t(start_id), state_space_t(goal_id), graph_env);
-      std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
-      if (solution.has_value())
+      for (const auto& exp : moving_ai_lab_scenario_.experiments)
       {
-        std::cout << "Solution cost: " << solution.value().second << std::endl;
-      }
-      else
-      {
-        std::cout << "Failed to find a solution\n";
+        // width - x, height - y, top-left - (0, 0)
+        const auto start_x = exp.start_y;
+        const auto start_y = exp.start_x;
+        const auto goal_x = exp.goal_y;
+        const auto goal_y = exp.goal_x;
+
+        const auto start_id = (start_x * width) + start_y;
+        const auto goal_id = (goal_x * width) + goal_y;
+
+        // set start and goal states
+        graph_env.setStartAndGoalState(state_space_t(start_id), state_space_t(goal_id));
+
+        // reset the planner
+        dijkstra_algorithm.reset(graph_env);
+
+        // run the planner
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+        auto solution =
+            dijkstra_algorithm.solve(state_space_t(start_id), state_space_t(goal_id), graph_env);
+
+        auto running_time = std::chrono::duration_cast<std::chrono::microseconds>(
+                                std::chrono::steady_clock::now() - begin)
+                                .count();
+        running_times.push_back(static_cast<size_t>(running_time));
+
+        if (solution.has_value())
+        {
+          const auto cost = solution.value().second;
+          const auto expansions = dijkstra_algorithm.getNodeExpansions().size();
+
+          optimal_lengths.push_back(cost);
+          node_expansions.push_back(expansions);
+        }
+        else
+        {
+          optimal_lengths.push_back(std::numeric_limits<double>::infinity());
+          node_expansions.push_back(0u);
+        }
       }
 
-      std::cout << "Computation time = "
-                << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()
-                << "[us]" << std::endl;
+      // compute average data
+      const auto exp_size = moving_ai_lab_scenario_.experiments.size();
+      const auto avg_optimal_length =
+          std::reduce(optimal_lengths.begin(), optimal_lengths.end()) / exp_size;
+      const auto avg_node_expansion =
+          std::reduce(node_expansions.begin(), node_expansions.end()) / exp_size * 1.0;
+      const auto avg_running_time =
+          std::reduce(running_times.begin(), running_times.end()) / exp_size * 1.0;
+
+      // log the data in tabular format
+      std::cout << "\n";
+
+      using namespace tabulate;
+
+      Table path_length_header_table;
+      path_length_header_table.add_row(Table::Row_t{"Path Length"});
+      path_length_header_table[0].format().font_align(FontAlign::center);
+      path_length_header_table[0].format().hide_border();
+      path_length_header_table[0]
+          .format()
+          .border_color(Color::green)
+          .font_color(Color::cyan)
+          .font_style({FontStyle::underline})
+          .padding_top(0)
+          .padding_bottom(0);
+
+      Table node_expansions_header_table;
+      node_expansions_header_table.add_row(Table::Row_t{"# of vertex expansions"});
+      node_expansions_header_table[0].format().font_align(FontAlign::center);
+      node_expansions_header_table[0].format().hide_border();
+      node_expansions_header_table[0]
+          .format()
+          .border_color(Color::green)
+          .font_color(Color::cyan)
+          .font_style({FontStyle::underline})
+          .padding_top(0)
+          .padding_bottom(0);
+
+      Table running_times_header_table;
+      running_times_header_table.add_row(Table::Row_t{"Runtime in ms"});
+      running_times_header_table[0].format().font_align(FontAlign::center);
+      running_times_header_table[0].format().hide_border();
+      running_times_header_table[0]
+          .format()
+          .border_color(Color::green)
+          .font_color(Color::cyan)
+          .font_style({FontStyle::underline})
+          .padding_top(0)
+          .padding_bottom(0);
+
+      Table path_length_table;
+      path_length_table.add_row(Table::Row_t{"Scenario Name", "Dijkstra"});
+      path_length_table.add_row(Table::Row_t{moving_ai_lab_scenario_.experiments[0].map_name,
+                                             std::to_string(avg_optimal_length)});
+      path_length_table[0].format().font_color(Color::yellow).font_style({FontStyle::bold});
+
+      Table node_expansions_table;
+      node_expansions_table.add_row(Table::Row_t{"Scenario Name", "Dijkstra"});
+      node_expansions_table.add_row(Table::Row_t{moving_ai_lab_scenario_.experiments[0].map_name,
+                                                 std::to_string(avg_node_expansion)});
+      node_expansions_table[0].format().font_color(Color::yellow).font_style({FontStyle::bold});
+
+      Table running_times_table;
+      running_times_table.add_row(Table::Row_t{"Scenario Name", "Dijkstra"});
+      running_times_table.add_row(Table::Row_t{moving_ai_lab_scenario_.experiments[0].map_name,
+                                               std::to_string(avg_running_time * 0.001)});
+      running_times_table[0].format().font_color(Color::yellow).font_style({FontStyle::bold});
+
+      std::cout << path_length_header_table;
+      std::cout << path_length_table << "\n\n";
+      std::cout << node_expansions_header_table;
+      std::cout << node_expansions_table << "\n\n";
+      std::cout << running_times_header_table;
+      std::cout << running_times_table << "\n";
     }
   }
 

@@ -82,6 +82,8 @@ public:
                                                  const state_space_t& goal,
                                                  env_t& planning_problem);
 
+  const std::vector<vertex_id_t>& getNodeExpansions() const { return close_list_; }
+
 protected:
   /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -122,6 +124,15 @@ void Dijkstra<EnvironmentType>::reset(env_t& planning_problem)
   // Subsequent calls to solve() will not reserve memory again
   // if the planning problem is never changed
 
+  // reset everything
+  visited_list_.clear();
+  close_list_.clear();
+
+  while (!open_list_.empty())
+  {
+    open_list_.pop();
+  }
+
   const auto n = planning_problem.graphOrder();
 
   visited_list_.assign(n, false);
@@ -133,14 +144,25 @@ void Dijkstra<EnvironmentType>::reset(env_t& planning_problem)
   start_vertex_id_ = start_vertex_id;
   goal_vertex_id_ = goal_vertex_id;
 
-  // if astar heuristics is used, we precompute h-values (cost-to-go heuristic)
-  if (use_astar_heuristics_)
+  // go through all the vertices in the graph
+  // to precompute necessary stuffs
+  for (size_t i = 0; i < n; ++i)
   {
-    for (size_t i = 0; i < n; ++i)
+    auto& q = planning_problem.vertex(i);
+
+    // reset vertex attribs
+    q.g_value = std::numeric_limits<double>::infinity();
+    q.parent = vertex_id_t{};
+
+    // if astar heuristics is used, we precompute h-values (cost-to-go heuristic)
+    if (use_astar_heuristics_)
     {
-      auto& q = planning_problem.vertex(i);
       q.h_value = planning_problem.cost(state_space_t{static_cast<vertex_id_t>(i)},
                                         state_space_t{static_cast<vertex_id_t>(goal_vertex_id_)});
+    }
+    else
+    {
+      q.h_value = 0.0;
     }
   }
 
